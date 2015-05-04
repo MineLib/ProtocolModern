@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CEBA6FFC-494A-43A2-8847-8EFA99D88605}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ProtocolModern</RootNamespace>
+    <AssemblyName>ProtocolModern.Portable</AssemblyName>
+    <DefaultLanguage>ru-RU</DefaultLanguage>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Data\Anvil\Chunk.cs" />
+    <Compile Include="PKCS15.cs" />
+    <Compile Include="Enum\Animation.cs" />
+    <Compile Include="Enum\BlockActions.cs" />
+    <Compile Include="Enum\ChatFlags.cs" />
+    <Compile Include="Enum\ChatMessagePosition.cs" />
+    <Compile Include="Enum\ChatMode.cs" />
+    <Compile Include="Enum\ClickMode.cs" />
+    <Compile Include="Enum\ClientStatus.cs" />
+    <Compile Include="Enum\Difficulty.cs" />
+    <Compile Include="Enum\DigStatus.cs" />
+    <Compile Include="Enum\Dimension.cs" />
+    <Compile Include="Enum\Direction.cs" />
+    <Compile Include="Enum\EffectID.cs" />
+    <Compile Include="Enum\EntityAction.cs" />
+    <Compile Include="Enum\EntityEquipmentSlot.cs" />
+    <Compile Include="Enum\EntityStatus.cs" />
+    <Compile Include="Enum\Face.cs" />
+    <Compile Include="Enum\GameMode.cs" />
+    <Compile Include="Enum\GameStateReason.cs" />
+    <Compile Include="Enum\Mobs.cs" />
+    <Compile Include="Enum\NextState.cs" />
+    <Compile Include="Enum\Objects.cs" />
+    <Compile Include="Enum\PacketsEnums.cs" />
+    <Compile Include="Enum\Particle.cs" />
+    <Compile Include="Enum\PlayerListAction.cs" />
+    <Compile Include="Enum\PlayerPositionAndLookFlags.cs" />
+    <Compile Include="Enum\ResourcePackStatus.cs" />
+    <Compile Include="Enum\ScoreboardPosition.cs" />
+    <Compile Include="Enum\SteerVehicle.cs" />
+    <Compile Include="Enum\TeamMode.cs" />
+    <Compile Include="Enum\TitleAction.cs" />
+    <Compile Include="Enum\UpdateBlockEntityAction.cs" />
+    <Compile Include="Enum\UseEntity.cs" />
+    <Compile Include="Enum\WorldBorderAction.cs" />
+    <Compile Include="IO\BouncyCastleAES.cs" />
+    <Compile Include="IO\IAesStream.cs" />
+    <Compile Include="IO\IProtocolStreamExtended.cs" />
+    <Compile Include="IO\ModernDataReader.cs" />
+    <Compile Include="IO\ModernStream.cs" />
+    <Compile Include="Packets\ClientResponse.cs" />
+    <Compile Include="Packets\Client\AnimationPacket.cs" />
+    <Compile Include="Packets\Client\ChatMessagePacket.cs" />
+    <Compile Include="Packets\Client\ClickWindowPacket.cs" />
+    <Compile Include="Packets\Client\ClientSettingsPacket.cs" />
+    <Compile Include="Packets\Client\ClientStatusPacket.cs" />
+    <Compile Include="Packets\Client\CloseWindowPacket.cs" />
+    <Compile Include="Packets\Client\ConfirmTransactionPacket.cs" />
+    <Compile Include="Packets\Client\CreativeInventoryActionPacket.cs" />
+    <Compile Include="Packets\Client\EnchantItemPacket.cs" />
+    <Compile Include="Packets\Client\EntityActionPacket.cs" />
+    <Compile Include="Packets\Client\HeldItemChangePacket.cs" />
+    <Compile Include="Packets\Client\KeepAlivePacket.cs" />
+    <Compile Include="Packets\Client\Login\EncryptionResponsePacket.cs" />
+    <Compile Include="Packets\Client\Login\LoginStartPacket.cs" />
+    <Compile Include="Packets\Client\PlayerAbilitiesPacket.cs" />
+    <Compile Include="Packets\Client\PlayerBlockPlacementPacket.cs" />
+    <Compile Include="Packets\Client\PlayerDiggingPacket.cs" />
+    <Compile Include="Packets\Client\PlayerLookPacket.cs" />
+    <Compile Include="Packets\Client\PlayerPacket.cs" />
+    <Compile Include="Packets\Client\PlayerPositionAndLookPacket.cs" />
+    <Compile Include="Packets\Client\PlayerPositionPacket.cs" />
+    <Compile Include="Packets\Client\PluginMessagePacket.cs" />
+    <Compile Include="Packets\Client\ResourcePackStatusPacket.cs" />
+    <Compile Include="Packets\Client\SpectatePacket.cs" />
+    <Compile Include="Packets\Client\Status\PingPacket.cs" />
+    <Compile Include="Packets\Client\Status\RequestPacket.cs" />
+    <Compile Include="Packets\Client\SteerVehiclePacket.cs" />
+    <Compile Include="Packets\Client\TabCompletePacket.cs" />
+    <Compile Include="Packets\Client\UpdateSignPacket.cs" />
+    <Compile Include="Packets\Client\UseEntityPacket.cs" />
+    <Compile Include="Packets\HandshakePacket.cs" />
+    <Compile Include="Packets\ServerResponse.cs" />
+    <Compile Include="Packets\Server\AnimationPacket.cs" />
+    <Compile Include="Packets\Server\AttachEntityPacket.cs" />
+    <Compile Include="Packets\Server\BlockActionPacket.cs" />
+    <Compile Include="Packets\Server\BlockBreakAnimationPacket.cs" />
+    <Compile Include="Packets\Server\BlockChangePacket.cs" />
+    <Compile Include="Packets\Server\CameraPacket.cs" />
+    <Compile Include="Packets\Server\ChangeGameStatePacket.cs" />
+    <Compile Include="Packets\Server\ChatMessagePacket.cs" />
+    <Compile Include="Packets\Server\ChunkDataPacket.cs" />
+    <Compile Include="Packets\Server\CloseWindowPacket.cs" />
+    <Compile Include="Packets\Server\CollectItemPacket.cs" />
+    <Compile Include="Packets\Server\CombatEventPacket.cs" />
+    <Compile Include="Packets\Server\ConfirmTransactionPacket.cs" />
+    <Compile Include="Packets\Server\DestroyEntitiesPacket.cs" />
+    <Compile Include="Packets\Server\DisconnectPacket.cs" />
+    <Compile Include="Packets\Server\DisplayScoreboardPacket.cs" />
+    <Compile Include="Packets\Server\EffectPacket.cs" />
+    <Compile Include="Packets\Server\EntityEffectPacket.cs" />
+    <Compile Include="Packets\Server\EntityEquipmentPacket.cs" />
+    <Compile Include="Packets\Server\EntityHeadLookPacket.cs" />
+    <Compile Include="Packets\Server\EntityLookAndRelativeMovePacket.cs" />
+    <Compile Include="Packets\Server\EntityLookPacket.cs" />
+    <Compile Include="Packets\Server\EntityMetadataPacket.cs" />
+    <Compile Include="Packets\Server\EntityPacket.cs" />
+    <Compile Include="Packets\Server\EntityPropertiesPacket.cs" />
+    <Compile Include="Packets\Server\EntityRelativeMovePacket.cs" />
+    <Compile Include="Packets\Server\EntityStatusPacket.cs" />
+    <Compile Include="Packets\Server\EntityTeleportPacket.cs" />
+    <Compile Include="Packets\Server\EntityVelocityPacket.cs" />
+    <Compile Include="Packets\Server\ExplosionPacket.cs" />
+    <Compile Include="Packets\Server\HeldItemChangePacket.cs" />
+    <Compile Include="Packets\Server\JoinGamePacket.cs" />
+    <Compile Include="Packets\Server\KeepAlivePacket.cs" />
+    <Compile Include="Packets\Server\Login\EncryptionRequestPacket.cs" />
+    <Compile Include="Packets\Server\Login\LoginDisconnectPacket.cs" />
+    <Compile Include="Packets\Server\Login\LoginSuccessPacket.cs" />
+    <Compile Include="Packets\Server\Login\SetCompressionPacket.cs" />
+    <Compile Include="Packets\Server\MapChunkBulkPacket.cs" />
+    <Compile Include="Packets\Server\MapsPacket.cs" />
+    <Compile Include="Packets\Server\MultiBlockChangePacket.cs" />
+    <Compile Include="Packets\Server\OpenWindowPacket.cs" />
+    <Compile Include="Packets\Server\ParticlePacket.cs" />
+    <Compile Include="Packets\Server\PlayerAbilitiesPacket.cs" />
+    <Compile Include="Packets\Server\PlayerListHeaderFooterPacket.cs" />
+    <Compile Include="Packets\Server\PlayerListItemPacket.cs" />
+    <Compile Include="Packets\Server\PlayerPositionAndLookServerPacket.cs" />
+    <Compile Include="Packets\Server\PluginMessagePacket.cs" />
+    <Compile Include="Packets\Server\RemoveEntityEffectPacket.cs" />
+    <Compile Include="Packets\Server\ResourcePackSendPacket.cs" />
+    <Compile Include="Packets\Server\RespawnPacket.cs" />
+    <Compile Include="Packets\Server\ScoreboardObjectivePacket.cs" />
+    <Compile Include="Packets\Server\ServerDifficultyPacket.cs" />
+    <Compile Include="Packets\Server\SetCompressionPacket.cs" />
+    <Compile Include="Packets\Server\SetExperiencePacket.cs" />
+    <Compile Include="Packets\Server\SetSlotPacket.cs" />
+    <Compile Include="Packets\Server\SignEditorOpenPacket.cs" />
+    <Compile Include="Packets\Server\SoundEffectPacket.cs" />
+    <Compile Include="Packets\Server\SpawnExperienceOrbPacket.cs" />
+    <Compile Include="Packets\Server\SpawnGlobalEntityPacket.cs" />
+    <Compile Include="Packets\Server\SpawnMobPacket.cs" />
+    <Compile Include="Packets\Server\SpawnObjectPacket.cs" />
+    <Compile Include="Packets\Server\SpawnPaintingPacket.cs" />
+    <Compile Include="Packets\Server\SpawnPlayerPacket.cs" />
+    <Compile Include="Packets\Server\SpawnPositionPacket.cs" />
+    <Compile Include="Packets\Server\StatisticsPacket.cs" />
+    <Compile Include="Packets\Server\Status\PingPacket.cs" />
+    <Compile Include="Packets\Server\Status\ResponsePacket.cs" />
+    <Compile Include="Packets\Server\TabCompletePacket.cs" />
+    <Compile Include="Packets\Server\TeamsPacket.cs" />
+    <Compile Include="Packets\Server\TimeUpdatePacket.cs" />
+    <Compile Include="Packets\Server\TitlePacket.cs" />
+    <Compile Include="Packets\Server\UpdateBlockEntityPacket.cs" />
+    <Compile Include="Packets\Server\UpdateEntityNBTPacket.cs" />
+    <Compile Include="Packets\Server\UpdateHealthPacket.cs" />
+    <Compile Include="Packets\Server\UpdateScorePacket.cs" />
+    <Compile Include="Packets\Server\UpdateSignPacket.cs" />
+    <Compile Include="Packets\Server\UseBedPacket.cs" />
+    <Compile Include="Packets\Server\WindowItemsPacket.cs" />
+    <Compile Include="Packets\Server\WindowPropertyPacket.cs" />
+    <Compile Include="Packets\Server\WorldBorderPacket.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol.AsyncReceive.cs" />
+    <Compile Include="Protocol.AsyncSending.cs" />
+    <Compile Include="Protocol.cs" />
+    <Compile Include="Protocol.Login.cs" />
+    <Compile Include="Protocol.Packets.cs" />
+    <Compile Include="Yggdrasil.cs" />
+    <Compile Include="Yggdrasil.Json.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
