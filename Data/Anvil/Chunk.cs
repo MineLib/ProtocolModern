@@ -27,9 +27,9 @@ namespace ProtocolModern.Data.Anvil
             var chunkRawBlocksLight = new byte[sectionCount * Chunk.HalfByteData];
             var chunkRawSkylight    = new byte[sectionCount * Chunk.HalfByteData];
 
-            Array.Copy(data, 0,                                                     chunkRawBlocks,         0, chunkRawBlocks.Length        );
-            Array.Copy(data, chunkRawBlocks.Length,                                 chunkRawBlocksLight,    0, chunkRawBlocksLight.Length   );
-            Array.Copy(data, chunkRawBlocks.Length + chunkRawBlocksLight.Length,    chunkRawSkylight,       0, chunkRawSkylight.Length      );
+            Buffer.BlockCopy(data, 0,                                                     chunkRawBlocks,         0, chunkRawBlocks.Length * sizeof(byte)       );
+            Buffer.BlockCopy(data, chunkRawBlocks.Length,                                 chunkRawBlocksLight,    0, chunkRawBlocksLight.Length * sizeof(byte)  );
+            Buffer.BlockCopy(data, chunkRawBlocks.Length + chunkRawBlocksLight.Length,    chunkRawSkylight,       0, chunkRawSkylight.Length * sizeof(byte)     );
 
             for (int y = 0, i = 0; y < 16; y++)
             {
@@ -37,23 +37,23 @@ namespace ProtocolModern.Data.Anvil
                 {
                     // Blocks & Metadata
                     var rawBlocks = new byte[Chunk.TwoByteData];
-                    Array.Copy(chunkRawBlocks, i * rawBlocks.Length, rawBlocks, 0, rawBlocks.Length);
+                    Buffer.BlockCopy(chunkRawBlocks, i * rawBlocks.Length, rawBlocks, 0, rawBlocks.Length * sizeof(byte));
 
                     // Light, convert to 1 byte per block
                     var rawBlockLight = new byte[Chunk.HalfByteData];
-                    Array.Copy(chunkRawSkylight, i * rawBlockLight.Length, rawBlockLight, 0, rawBlockLight.Length);
+                    Buffer.BlockCopy(chunkRawSkylight, i * rawBlockLight.Length, rawBlockLight, 0, rawBlockLight.Length * sizeof(byte));
 
                     // Sky light, convert to 1 byte per block
                     var rawSkyLight = new byte[Chunk.HalfByteData];
                     if (chunk.OverWorld)
-                        Array.Copy(chunkRawSkylight, i * rawSkyLight.Length, rawSkyLight, 0, rawSkyLight.Length);
+                        Buffer.BlockCopy(chunkRawSkylight, i * rawSkyLight.Length, rawSkyLight, 0, rawSkyLight.Length * sizeof(byte));
 
                     chunk.Sections[y].BuildFromNibbleData(rawBlocks, rawBlockLight, rawSkyLight);
                     i++;
                 }
             }
             if (chunk.GroundUp)
-                Array.Copy(data, data.Length - chunk.Biomes.Length, chunk.Biomes, 0, chunk.Biomes.Length);
+                Buffer.BlockCopy(data, data.Length - chunk.Biomes.Length, chunk.Biomes, 0, chunk.Biomes.Length * sizeof(byte));
 
             return chunk;
         }
@@ -94,13 +94,13 @@ namespace ProtocolModern.Data.Anvil
 
                 var chunkLength = sectionCount * (Chunk.TwoByteData + Chunk.HalfByteData + (chunk.OverWorld ? Chunk.HalfByteData : 0)) + Chunk.BiomesLength;
                 var chunkData = new byte[chunkLength];
-                Array.Copy(data, offset, chunkData, 0, chunkData.Length);
+                Buffer.BlockCopy(data, offset, chunkData, 0, chunkData.Length * sizeof(byte));
 
-                Array.Copy(chunkData, 0,                                                    chunkRawBlocks,         0, chunkRawBlocks.Length        );
-                Array.Copy(chunkData, chunkRawBlocks.Length,                                chunkRawBlocksLight,    0, chunkRawBlocksLight.Length   );
-                Array.Copy(chunkData, chunkRawBlocks.Length + chunkRawBlocksLight.Length,   chunkRawSkylight,       0, chunkRawSkylight.Length      );
+                Buffer.BlockCopy(chunkData, 0,                                                    chunkRawBlocks,         0, chunkRawBlocks.Length * sizeof(byte)       );
+                Buffer.BlockCopy(chunkData, chunkRawBlocks.Length,                                chunkRawBlocksLight,    0, chunkRawBlocksLight.Length * sizeof(byte)  );
+                Buffer.BlockCopy(chunkData, chunkRawBlocks.Length + chunkRawBlocksLight.Length,   chunkRawSkylight,       0, chunkRawSkylight.Length * sizeof(byte)     );
                 if (groundUp)
-                    Array.Copy(chunkData, chunkRawBlocks.Length + chunkRawBlocksLight.Length + chunkRawSkylight.Length, chunk.Biomes, 0, Chunk.BiomesLength);
+                    Buffer.BlockCopy(chunkData, chunkRawBlocks.Length + chunkRawBlocksLight.Length + chunkRawSkylight.Length, chunk.Biomes, 0, Chunk.BiomesLength * sizeof(byte));
 
                 for (int y = 0, i = 0; y < 16; y++)
                 {
@@ -108,16 +108,16 @@ namespace ProtocolModern.Data.Anvil
                     {
                         // Blocks & Metadata
                         var rawBlocks = new byte[Chunk.TwoByteData];
-                        Array.Copy(chunkRawBlocks, i * rawBlocks.Length, rawBlocks, 0, rawBlocks.Length);
+                        Buffer.BlockCopy(chunkRawBlocks, i * rawBlocks.Length, rawBlocks, 0, rawBlocks.Length * sizeof(byte));
 
                         // Light
                         var rawBlockLight = new byte[Chunk.HalfByteData];
-                        Array.Copy(chunkRawSkylight, i * rawBlockLight.Length, rawBlockLight, 0, rawBlockLight.Length);
+                        Buffer.BlockCopy(chunkRawSkylight, i * rawBlockLight.Length, rawBlockLight, 0, rawBlockLight.Length * sizeof(byte));
 
                         // Sky light
                         var rawSkyLight = new byte[Chunk.HalfByteData];
                         if (chunk.OverWorld)
-                            Array.Copy(chunkRawSkylight, i * rawSkyLight.Length, rawSkyLight, 0, rawSkyLight.Length);
+                            Buffer.BlockCopy(chunkRawSkylight, i * rawSkyLight.Length, rawSkyLight, 0, rawSkyLight.Length * sizeof(byte));
 
                         chunk.Sections[y].BuildFromNibbleData(rawBlocks, rawBlockLight, rawSkyLight);
                         i++;
