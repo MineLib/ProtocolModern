@@ -1,7 +1,8 @@
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.Data.Structs;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.Data;
+using MineLib.Core.Data.Structs;
+using MineLib.Core.IO;
+
 using Org.BouncyCastle.Math;
 
 namespace ProtocolModern.Packets.Server
@@ -40,8 +41,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteSByte(Pitch);
             stream.WriteShort(CurrentItem);
             EntityMetadata.ToStream(stream);
-            stream.Purge();
-
+            
             return this;
         }
     }

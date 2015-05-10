@@ -1,5 +1,5 @@
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
@@ -27,8 +27,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteShort(VelocityX);
             stream.WriteShort(VelocityY);
             stream.WriteShort(VelocityZ);
-            stream.Purge();
-
+            
             return this;
         }
     }

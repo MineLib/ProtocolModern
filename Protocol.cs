@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
 
 using ProtocolModern.IO;
 using ProtocolModern.Packets;
@@ -48,6 +49,7 @@ namespace ProtocolModern
 
         #endregion
 
+        private Task _readTask;
         private IMinecraftClient _minecraft;
 
         private IProtocolStreamExtended _stream;
@@ -65,16 +67,22 @@ namespace ProtocolModern
             PacketsReceived = new List<IPacket>();
             PacketsSended = new List<IPacket>();
 
-            AsyncSendingHandlers = new Dictionary<Type, Func<IAsyncSendingArgs, IAsyncResult>>();
-            RegisterSupportedAsyncSendings();
+            SendingAsyncHandlers = new Dictionary<Type, Func<ISendingAsyncArgs, Task>>();
+            RegisterSupportedSendings();
 
             return this;
         }
 
-        private void PacketReceiverAsync(IAsyncResult ar)
+        private async void ReadCycle()
+        {
+            while (PacketReceiver())
+                await Task.Delay(50);
+        }
+
+        private bool PacketReceiver()
         {
             if (!Connected)
-                return; // -- Terminate cycle
+                return false; // -- Terminate cycle
 
             if (_stream.Available)
             {
@@ -142,10 +150,9 @@ namespace ProtocolModern
                 HandlePacket(packetId, data);
             }
 
-            // -- If it will throw an error, then the cause is too slow _stream dispose
-            _stream.EndRead(ar);
-            _stream.BeginRead(new byte[0], 0, 0, PacketReceiverAsync, null);
+            return true;
         }
+
 
         /// <summary>
         /// Packets are handled here. Compression and encryption are handled here too
@@ -224,14 +231,15 @@ namespace ProtocolModern
             var encryptedSecret = PKCS15.EncryptData(rsaParameter, sharedKey);
             var encryptedVerify = PKCS15.EncryptData(rsaParameter, request.VerificationToken);
 
-            BeginSendPacketHandled(new EncryptionResponsePacket
+            SendPacket(new EncryptionResponsePacket
             {
                 SharedSecret = encryptedSecret,
                 VerificationToken = encryptedVerify
-            }, null, null);
+            });
 
             _stream.InitializeEncryption(sharedKey);
         }
+
 
         /// <summary>
         /// Setting compression
@@ -239,97 +247,13 @@ namespace ProtocolModern
         /// <param name="packet">EncryptionRequestPacket</param>
         private void ModernSetCompression(IPacket packet)
         {
-            var request = (ISetCompression)packet;
+            var request = (ISetCompressionPacket)packet;
 
             _stream.SetCompression(request.Threshold);
         }
 
 
         #region Network
-
-        public IAsyncResult BeginSendPacketHandled(IPacket packet, AsyncCallback asyncCallback, object state)
-        {
-            if (!Connected)
-                throw new ProtocolException("Connection error: Not connected to server.");
-
-            var result = BeginSendPacket(packet, asyncCallback, state);
-            EndSendPacket(result);
-
-            if (SavePackets)
-                PacketsSended.Add(packet);
-
-            return result;
-        }
-
-        public IAsyncResult BeginSendPacket(IPacket packet, AsyncCallback asyncCallback, object state)
-        {
-            if (!Connected)
-                throw new ProtocolException("Connection error: Not connected to server.");
-
-            return _stream.BeginSendPacket(packet, asyncCallback, state);
-        }
-
-        public void EndSendPacket(IAsyncResult asyncResult)
-        {
-            if (!Connected)
-                throw new ProtocolException("Connection error: Not connected to server.");
-
-            _stream.EndSend(asyncResult);
-        }
-
-        /// <summary>
-        /// If connected, don't call EndConnect.
-        /// </summary>
-        public IAsyncResult BeginConnect(string ip, ushort port, AsyncCallback asyncCallback, object state)
-        {
-            if (Connected)
-                throw new ProtocolException("Connection error: Already connected to server.");
-
-            var result = _stream.BeginConnect(ip, port, asyncCallback, state);
-            EndConnect(result);
-            
-            return result;
-        }
-
-        private void EndConnect(IAsyncResult asyncResult)
-        {
-            _stream.EndConnect(asyncResult);
-
-            if (!Connected)
-                throw new ProtocolException("Connection error: Not connected to server.");
-
-            // -- Begin data reading.
-            _stream.BeginRead(new byte[0], 0, 0, PacketReceiverAsync, null);
-        }
-
-
-        public IAsyncResult BeginDisconnect(AsyncCallback asyncCallback, object state)
-        {
-            if (!Connected)
-                throw new ProtocolException("Connection error: Not connected to server.");
-            
-            return _stream.BeginDisconnect(false, asyncCallback, state);
-        }
-
-        public void EndDisconnect(IAsyncResult asyncResult)
-        {
-            if (!Connected)
-                throw new ProtocolException("Connection error: Not connected to server.");
-            
-            _stream.EndDisconnect(asyncResult);
-        }
-
-
-        public void SendPacket(IPacket packet)
-        {
-            if (!Connected)
-                throw new ProtocolException("Connection error: Not connected to server.");
-
-            _stream.SendPacket(packet);
-
-            if (SavePackets)
-                PacketsSended.Add(packet);
-        }
 
         public void Connect(string ip, ushort port)
         {
@@ -340,7 +264,10 @@ namespace ProtocolModern
             _stream.Connect(ip, port);
 
             // -- Begin data reading.
-            _stream.BeginRead(new byte[0], 0, 0, PacketReceiverAsync, null);
+            if (_readTask != null && _readTask.Status == TaskStatus.Running)
+                throw new ProtocolException("Connection error: Task already running.");
+            else
+                _readTask = Task.Factory.StartNew(ReadCycle);
         }
 
         public void Disconnect()
@@ -349,6 +276,61 @@ namespace ProtocolModern
                 throw new ProtocolException("Connection error: Not connected to server.");
 
             _stream.Disconnect(false);
+        }
+
+        public void SendPacket(IPacket packet)
+        {
+            if (!Connected)
+                throw new ProtocolException("Connection error: Not connected to server.");
+
+            _stream.SendPacket(ref packet);
+
+            if (SavePackets)
+                PacketsSended.Add(packet);
+        }
+
+        public void SendPacket(ref IPacket packet)
+        {
+            if (!Connected)
+                throw new ProtocolException("Connection error: Not connected to server.");
+
+            _stream.SendPacket(ref packet);
+
+            if (SavePackets)
+                PacketsSended.Add(packet);
+        }
+
+
+        public async Task ConnectAsync(string ip, ushort port)
+        {
+            if (Connected)
+                throw new ProtocolException("Connection error: Already connected to server.");
+
+            await _stream.ConnectAsync(ip, port);
+
+            if (_readTask != null &&_readTask.Status == TaskStatus.Running)
+                throw new ProtocolException("Connection error: Task already running.");
+            else
+                _readTask = Task.Factory.StartNew(ReadCycle);
+        }
+
+        public bool DisconnectAsync()
+        {
+            if (!Connected)
+                throw new ProtocolException("Connection error: Not connected to server.");
+
+            return _stream.DisconnectAsync(false);
+        }
+
+        public async Task SendPacketAsync(IPacket packet)
+        {
+            if (!Connected)
+                throw new ProtocolException("Connection error: Not connected to server.");
+
+            await _stream.SendPacketAsync(packet);
+
+            if (SavePackets)
+                PacketsSended.Add(packet);
         }
 
         #endregion

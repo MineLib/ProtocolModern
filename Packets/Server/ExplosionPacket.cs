@@ -1,5 +1,5 @@
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
@@ -40,8 +40,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteFloat(PlayerMotionX);
             stream.WriteFloat(PlayerMotionY);
             stream.WriteFloat(PlayerMotionZ);
-            stream.Purge();
-
+            
             return this;
         }
     }

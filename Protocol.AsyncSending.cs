@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
-using MineLib.Network;
-using MineLib.Network.Data.Structs;
+using MineLib.Core;
+using MineLib.Core.Data.Structs;
 
 using ProtocolModern.Enum;
 using ProtocolModern.Packets;
@@ -16,135 +17,144 @@ namespace ProtocolModern
 {
     public sealed partial class Protocol
     {
-        private Dictionary<Type, Func<IAsyncSendingArgs, IAsyncResult>> AsyncSendingHandlers { get; set; }
+        private Dictionary<Type, Func<ISendingAsyncArgs, Task>> SendingAsyncHandlers { get; set; }
 
-        public void RegisterAsyncSending(Type asyncSendingType, Func<IAsyncSendingArgs, IAsyncResult> method)
+        public void RegisterSending(Type sendingAsyncType, Func<ISendingAsyncArgs, Task> func)
         {
-            var any = asyncSendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(IAsyncSending));
+            var any = sendingAsyncType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISendingAsync));
             if (!any)
                 throw new InvalidOperationException("AsyncSending type must implement MineLib.Network.IAsyncSending");
 
-            AsyncSendingHandlers[asyncSendingType] = method;
+            SendingAsyncHandlers[sendingAsyncType] = func;
+        }
+        
+        private void RegisterSupportedSendings()
+        {
+            RegisterSending(typeof(ConnectToServerAsync), ConnectToServerAsync);
+            RegisterSending(typeof(KeepAliveAsync), KeepAliveAsync);
+            RegisterSending(typeof(SendClientInfoAsync), SendClientInfoAsync);
+            RegisterSending(typeof(RespawnAsync), RespawnAsync);
+            RegisterSending(typeof(PlayerMovedAsync), PlayerMovedAsync);
+            RegisterSending(typeof(PlayerSetRemoveBlockAsync), PlayerSetRemoveBlockAsync);
+            RegisterSending(typeof(SendMessageAsync), SendMessageAsync);
+            RegisterSending(typeof(PlayerHeldItemAsync), PlayerHeldItemAsync);
         }
 
-
-        private void RegisterSupportedAsyncSendings()
+        public Task DoSendingAsync(Type sendingAsyncType, ISendingAsyncArgs args)
         {
-            RegisterAsyncSending(typeof(BeginConnectToServer), BeginConnectToServer);
-            RegisterAsyncSending(typeof(BeginKeepAlive), BeginKeepAlive);
-            RegisterAsyncSending(typeof(BeginSendClientInfo), BeginSendClientInfo);
-            RegisterAsyncSending(typeof(BeginRespawn), BeginRespawn);
-            RegisterAsyncSending(typeof(BeginPlayerMoved), BeginPlayerMoved);
-            RegisterAsyncSending(typeof(BeginPlayerSetRemoveBlock), BeginPlayerSetRemoveBlock);
-            RegisterAsyncSending(typeof(BeginSendMessage), BeginSendMessage);
-            RegisterAsyncSending(typeof(BeginPlayerHeldItem), BeginPlayerHeldItem);
-		}
-
-        public IAsyncResult DoAsyncSending(Type asyncSendingType, IAsyncSendingArgs parameters)
-        {
-            bool any = asyncSendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(IAsyncSending));
+            var any = sendingAsyncType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISendingAsync));
             if (!any)
                 throw new InvalidOperationException("AsyncSending type must implement MineLib.Network.IAsyncSending");
 
-            return AsyncSendingHandlers[asyncSendingType](parameters);
+            return SendingAsyncHandlers[sendingAsyncType](args);
+        }
+
+        public void DoSending(Type sendingType, ISendingAsyncArgs args)
+        {
+            var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISendingAsync));
+            if (!any)
+                throw new InvalidOperationException("AsyncSending type must implement MineLib.Network.IAsyncSending");
+
+            SendingAsyncHandlers[sendingType](args).Wait();
         }
 
 
-        private IAsyncResult BeginConnectToServer(IAsyncSendingArgs parameters)
+
+        private async Task ConnectToServerAsync(ISendingAsyncArgs args)
         {
-            var param = (BeginConnectToServerArgs) parameters;
+            var data = (ConnectToServerAsyncArgs) args;
 
             State = ConnectionState.Joining;
 
-            BeginSendPacketHandled(new HandshakePacket
+            await SendPacketAsync(new HandshakePacket
             {
                 ProtocolVersion = 47,
                 ServerAddress = _minecraft.ServerHost,
                 ServerPort = _minecraft.ServerPort,
                 NextState = NextState.Login,
-            }, null, null);
+            });
 
-            return BeginSendPacketHandled(new LoginStartPacket { Name = _minecraft.ClientUsername }, param.AsyncCallback, param.State);
+            await SendPacketAsync(new LoginStartPacket { Name = _minecraft.ClientUsername });
         }
 
-        private IAsyncResult BeginKeepAlive(IAsyncSendingArgs parameters)
+        private Task KeepAliveAsync(ISendingAsyncArgs args)
         {
-            var param = (BeginKeepAliveArgs) parameters;
+            var data = (KeepAliveAsyncArgs) args;
 
-            return BeginSendPacketHandled(new KeepAlivePacket { KeepAlive = param.KeepAlive }, param.AsyncCallback, param.State);
+            return SendPacketAsync(new KeepAlivePacket { KeepAlive = data.KeepAlive });
         }
 
-        private IAsyncResult BeginSendClientInfo(IAsyncSendingArgs parameters)
+        private Task SendClientInfoAsync(ISendingAsyncArgs args)
         {
-            var param = (BeginSendClientInfoArgs) parameters;
+            var data = (SendClientInfoAsyncArgs) args;
 
-            return BeginSendPacketHandled(new PluginMessagePacket
+            return SendPacketAsync(new PluginMessagePacket
             {
                 Channel = "MC|Brand",
                 Data = Encoding.UTF8.GetBytes(_minecraft.ClientBrand)
-            }, param.AsyncCallback, param.State);
+            });
         }
 
-        private IAsyncResult BeginRespawn(IAsyncSendingArgs parameters)
+        private Task RespawnAsync(ISendingAsyncArgs args)
         {
-            var param = (BeginRespawnArgs) parameters;
+            var data = (RespawnAsyncArgs) args;
 
-            return BeginSendPacketHandled(new ClientStatusPacket { Status = ClientStatus.Respawn }, param.AsyncCallback, param.State);
+            return SendPacketAsync(new ClientStatusPacket { Status = ClientStatus.Respawn });
         }
 
-        private IAsyncResult BeginPlayerMoved(IAsyncSendingArgs parameters)
+        private Task PlayerMovedAsync(ISendingAsyncArgs args)
         {
-            var param = (BeginPlayerMovedArgs) parameters;
-            switch (param.Mode)
+            var data = (PlayerMovedAsyncArgs)args;
+            switch (data.Mode)
             {
                 case PlaverMovedMode.OnGround:
                 {
-                    var data = (PlaverMovedDataOnGround) param.Data;
+                    var pdata = (PlaverMovedDataOnGround) data.Data;
 
-                    return BeginSendPacketHandled(new PlayerPacket
+                    return SendPacketAsync(new PlayerPacket
                     {
-                        OnGround =  data.OnGround
-                    }, param.AsyncCallback, param.State);
+                        OnGround = pdata.OnGround
+                    });
                 }
 
                 case PlaverMovedMode.Vector3:
                 {
-                    var data = (PlaverMovedDataVector3) param.Data;
+                    var pdata = (PlaverMovedDataVector3) data.Data;
 
-                    return BeginSendPacketHandled(new PlayerPositionPacket
+                    return SendPacketAsync(new PlayerPositionPacket
                     {
-                        X =         data.Vector3.X,
-                        FeetY =     data.Vector3.Y,
-                        Z =         data.Vector3.Z,
-                        OnGround =  data.OnGround
-                    }, param.AsyncCallback, param.State);
+                        X =         pdata.Vector3.X,
+                        FeetY =     pdata.Vector3.Y,
+                        Z =         pdata.Vector3.Z,
+                        OnGround =  pdata.OnGround
+                    });
                 }
 
                 case PlaverMovedMode.YawPitch:
                 {
-                    var data = (PlaverMovedDataYawPitch) param.Data;
+                    var pdata = (PlaverMovedDataYawPitch) data.Data;
 
-                    return BeginSendPacketHandled(new PlayerLookPacket
+                    return SendPacketAsync(new PlayerLookPacket
                     {
-                        Yaw =       data.Yaw,
-                        Pitch =     data.Pitch,
-                        OnGround =  data.OnGround
-                    }, param.AsyncCallback, param.State);
+                        Yaw =       pdata.Yaw,
+                        Pitch =     pdata.Pitch,
+                        OnGround =  pdata.OnGround
+                    });
                 }
 
                 case PlaverMovedMode.All:
                 {
-                    var data = (PlaverMovedDataAll) param.Data;
+                    var pdata = (PlaverMovedDataAll) data.Data;
 
-                    return BeginSendPacketHandled(new PlayerPositionAndLookPacket
+                    return SendPacketAsync(new PlayerPositionAndLookPacket
                     {
-                        X =         data.Vector3.X,
-                        FeetY =     data.Vector3.Y,
-                        Z =         data.Vector3.Z,
-                        Yaw =       data.Yaw,
-                        Pitch =     data.Pitch,
-                        OnGround =  data.OnGround
-                    }, param.AsyncCallback, param.State);
+                        X =         pdata.Vector3.X,
+                        FeetY =     pdata.Vector3.Y,
+                        Z =         pdata.Vector3.Z,
+                        Yaw =       pdata.Yaw,
+                        Pitch =     pdata.Pitch,
+                        OnGround =  pdata.OnGround
+                    });
                 }
 
                 default:
@@ -152,40 +162,40 @@ namespace ProtocolModern
             }
         }
 
-        private IAsyncResult BeginPlayerSetRemoveBlock(IAsyncSendingArgs parameters)
+        private Task PlayerSetRemoveBlockAsync(ISendingAsyncArgs args)
         {
-            var param = (BeginPlayerSetRemoveBlockArgs) parameters;
+            var data = (PlayerSetRemoveBlockAsyncArgs) args;
             
-            switch (param.Mode)
+            switch (data.Mode)
             {
                 case PlayerSetRemoveBlockMode.Place:
                 {
-                    var data = (PlayerSetRemoveBlockDataPlace) param.Data;
+                    var pdata = (PlayerSetRemoveBlockDataPlace) data.Data;
 
-                    return BeginSendPacketHandled(new PlayerBlockPlacementPacket
+                    return SendPacketAsync(new PlayerBlockPlacementPacket
                     {
-                        Location = data.Location,
-                        Slot = data.Slot,
-                        CursorVector3 = data.Crosshair,
-                        Direction = (Direction) data.Direction
-                    }, param.AsyncCallback, param.State);
+                        Location =              pdata.Location,
+                        Slot =                  pdata.Slot,
+                        CursorVector3 =         pdata.Crosshair,
+                        Direction = (Direction) pdata.Direction
+                    });
                 }
 
                 case PlayerSetRemoveBlockMode.Dig:
                 {
-                    var data = (PlayerSetRemoveBlockDataDig)param.Data;
+                    var pdata = (PlayerSetRemoveBlockDataDig) data.Data;
 
-                    return BeginSendPacketHandled(new PlayerDiggingPacket
+                    return SendPacketAsync(new PlayerDiggingPacket
                     {
-                        Status = (BlockStatus) data.Status,
-                        Location = data.Location,
-                        Face = data.Face
-                    }, param.AsyncCallback, param.State);
+                        Status = (BlockStatus)  pdata.Status,
+                        Location =              pdata.Location,
+                        Face =                  pdata.Face
+                    });
                 }
 
                 case PlayerSetRemoveBlockMode.Remove:
                 {
-                    var data = (PlayerSetRemoveBlockDataRemove)param.Data;
+                    var pdata = (PlayerSetRemoveBlockDataRemove) data.Data;
                     return null;
                 }
 
@@ -194,18 +204,18 @@ namespace ProtocolModern
             }
         }
 
-        private IAsyncResult BeginSendMessage(IAsyncSendingArgs parameters)
+        private Task SendMessageAsync(ISendingAsyncArgs args)
         {
-            var param = (BeginSendMessageArgs) parameters;
+            var data = (SendMessageAsyncArgs) args;
 
-            return BeginSendPacketHandled(new ChatMessagePacket { Message = param.Message }, param.AsyncCallback, param.State);
+            return SendPacketAsync(new ChatMessagePacket { Message = data.Message });
         }
 
-        private IAsyncResult BeginPlayerHeldItem(IAsyncSendingArgs parameters)
+        private Task PlayerHeldItemAsync(ISendingAsyncArgs args)
         {
-            var param = (BeginPlayerHeldItemArgs) parameters;
+            var data = (PlayerHeldItemAsyncArgs) args;
 
-            return BeginSendPacketHandled(new HeldItemChangePacket { Slot = param.Slot }, param.AsyncCallback, param.State);
+            return SendPacketAsync(new HeldItemChangePacket { Slot = data.Slot });
         }
     }
 }

@@ -1,6 +1,6 @@
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.Data;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
@@ -27,8 +27,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteVarInt(EntityID);
             DeltaVector3.ToStreamSByteFixedPoint(stream);
             stream.WriteBoolean(OnGround);
-            stream.Purge();
-
+            
             return this;
         }
     }

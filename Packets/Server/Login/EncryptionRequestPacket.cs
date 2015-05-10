@@ -1,7 +1,5 @@
-using System;
-
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server.Login
 {
@@ -32,8 +30,7 @@ namespace ProtocolModern.Packets.Server.Login
             stream.WriteByteArray(PublicKey);
             stream.WriteVarInt(VerificationToken.Length);
             stream.WriteByteArray(VerificationToken);
-            stream.Purge();
-
+            
             return this;
         }
     }

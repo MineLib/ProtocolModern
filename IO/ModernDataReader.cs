@@ -2,8 +2,8 @@
 using System.IO;
 using System.Text;
 
-using MineLib.Network.Data;
-using MineLib.Network.IO;
+using MineLib.Core.Data;
+using MineLib.Core.IO;
 
 using Org.BouncyCastle.Math;
 

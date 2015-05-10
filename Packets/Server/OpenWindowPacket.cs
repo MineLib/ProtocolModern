@@ -1,5 +1,5 @@
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
@@ -34,8 +34,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteByte(NumberOfSlots);
             if (InventoryType == "EntityHorse")
                 stream.WriteInt(EntityID.GetValueOrDefault());
-            stream.Purge();
-
+            
             return this;
         }
     }

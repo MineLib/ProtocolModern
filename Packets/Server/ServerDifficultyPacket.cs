@@ -1,5 +1,6 @@
-﻿using MineLib.Network;
-using MineLib.Network.IO;
+﻿using MineLib.Core;
+using MineLib.Core.IO;
+
 using ProtocolModern.Enum;
 
 namespace ProtocolModern.Packets.Server
@@ -21,8 +22,7 @@ namespace ProtocolModern.Packets.Server
         {
             stream.WriteVarInt(ID);
             stream.WriteByte((byte) Difficulty);
-            stream.Purge();
-
+            
             return this;
         }
     }

@@ -1,5 +1,5 @@
-﻿using MineLib.Network;
-using MineLib.Network.IO;
+﻿using MineLib.Core;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
@@ -25,8 +25,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteVarInt(EntityID);
             stream.WriteVarInt(NBTTag.Length);
             stream.WriteByteArray(NBTTag);
-            stream.Purge();
-
+            
             return this;
         }
     }

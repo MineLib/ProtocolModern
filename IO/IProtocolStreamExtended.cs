@@ -1,4 +1,4 @@
-﻿using MineLib.Network.IO;
+﻿using MineLib.Core.IO;
 
 namespace ProtocolModern.IO
 {

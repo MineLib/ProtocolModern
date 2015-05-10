@@ -1,5 +1,5 @@
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
@@ -26,8 +26,7 @@ namespace ProtocolModern.Packets.Client
             stream.WriteByte(WindowID);
             stream.WriteShort(Slot);
             stream.WriteBoolean(Accepted);
-            stream.Purge();
-
+            
             return this;
         }
     }

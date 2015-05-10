@@ -1,6 +1,7 @@
-﻿using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.IO;
+﻿using MineLib.Core;
+using MineLib.Core.Data;
+using MineLib.Core.IO;
+
 using ProtocolModern.Enum;
 
 namespace ProtocolModern.Packets.Server
@@ -30,8 +31,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteByte((byte) Action);
             stream.WriteVarInt(NBTData.Length);
             stream.WriteByteArray(NBTData);
-            stream.Purge();
-
+            
             return this;
         }
     }

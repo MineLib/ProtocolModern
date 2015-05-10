@@ -1,5 +1,5 @@
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server.Login
 {
@@ -23,8 +23,7 @@ namespace ProtocolModern.Packets.Server.Login
             stream.WriteVarInt(ID);
             stream.WriteString(UUID);
             stream.WriteString(Username);
-            stream.Purge();
-
+            
             return this;
         }
     }

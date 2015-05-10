@@ -1,6 +1,7 @@
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.Data;
+using MineLib.Core.IO;
+
 using ProtocolModern.Enum;
 
 namespace ProtocolModern.Packets.Server
@@ -31,8 +32,7 @@ namespace ProtocolModern.Packets.Server
             Location.ToStreamLong(stream);
             stream.WriteInt(Data);
             stream.WriteBoolean(DisableRelativeVolume);
-            stream.Purge();
-
+            
             return this;
         }
     }

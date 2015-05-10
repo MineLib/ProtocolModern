@@ -1,7 +1,7 @@
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.Data.Structs;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.Data.Structs;
+using MineLib.Core.IO;
+
 using ProtocolModern.Enum;
 
 namespace ProtocolModern.Packets.Client
@@ -35,8 +35,7 @@ namespace ProtocolModern.Packets.Client
             stream.WriteByte((byte) ChatFlags);
             stream.WriteBoolean(ChatColours);
             DisplayedSkinParts.ToStream(stream);
-            stream.Purge();
-
+            
             return this;
         }
     }

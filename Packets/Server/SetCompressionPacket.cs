@@ -1,10 +1,11 @@
-﻿using MineLib.Network;
-using MineLib.Network.IO;
+﻿using MineLib.Core;
+using MineLib.Core.IO;
+
 using ProtocolModern.Packets.Server.Login;
 
 namespace ProtocolModern.Packets.Server
 {
-    public struct SetCompressionPacket : ISetCompression
+    public struct SetCompressionPacket : ISetCompressionPacket
     {
         public int Threshold { get; set; }
 
@@ -21,8 +22,7 @@ namespace ProtocolModern.Packets.Server
         {
             stream.WriteVarInt(ID);
             stream.WriteVarInt(Threshold);
-            stream.Purge();
-
+            
             return this;
         }
     }

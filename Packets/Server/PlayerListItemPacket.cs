@@ -1,7 +1,10 @@
 using System.Collections.Generic;
-using MineLib.Network;
-using MineLib.Network.IO;
+
+using MineLib.Core;
+using MineLib.Core.IO;
+
 using Org.BouncyCastle.Math;
+
 using ProtocolModern.Enum;
 
 namespace ProtocolModern.Packets.Server
@@ -224,8 +227,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteVarInt(Length);
             stream.WriteBigInteger(UUID);
             PlayerList.ToStream(stream);
-            stream.Purge();
-
+            
             return this;
         }
     }

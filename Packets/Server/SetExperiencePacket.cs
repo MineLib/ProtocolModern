@@ -1,5 +1,5 @@
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
@@ -26,8 +26,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteFloat(ExperienceBar);
             stream.WriteVarInt(Level);
             stream.WriteVarInt(TotalExperience);
-            stream.Purge();
-
+            
             return this;
         }
     }

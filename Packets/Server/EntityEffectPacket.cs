@@ -1,5 +1,6 @@
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
+
 using ProtocolModern.Enum;
 
 namespace ProtocolModern.Packets.Server
@@ -33,8 +34,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteSByte(Amplifier);
             stream.WriteVarInt(Duration);
             stream.WriteBoolean(HideParticles);
-            stream.Purge();
-
+            
             return this;
         }
     }

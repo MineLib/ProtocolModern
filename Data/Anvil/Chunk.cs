@@ -2,12 +2,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.Data.Anvil;
-using MineLib.Network.Data.Structs;
-using MineLib.Network.IO;
+
+using MineLib.Core;
+using MineLib.Core.Data;
+using MineLib.Core.Data.Anvil;
+using MineLib.Core.Data.Structs;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Data.Anvil
 {

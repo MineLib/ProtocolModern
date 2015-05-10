@@ -1,7 +1,6 @@
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.Data.Structs;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.Data.Structs;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
@@ -25,8 +24,7 @@ namespace ProtocolModern.Packets.Client
             stream.WriteVarInt(ID);
             stream.WriteShort(Slot);
             ClickedItem.ToStream(stream);
-            stream.Purge();
-
+            
             return this;
         }
     }

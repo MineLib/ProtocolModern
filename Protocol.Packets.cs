@@ -1,4 +1,4 @@
-﻿using MineLib.Network;
+﻿using MineLib.Core;
 
 using ProtocolModern.Enum;
 using ProtocolModern.Packets.Server;
@@ -54,7 +54,7 @@ namespace ProtocolModern
                     {
                         case PacketsServer.KeepAlive:
                             var keepAlivePacket = (KeepAlivePacket) packet;
-                            BeginKeepAlive(new BeginKeepAliveArgs(keepAlivePacket.KeepAlive, null, null));
+                            KeepAliveAsync(new KeepAliveAsyncArgs(keepAlivePacket.KeepAlive)).Wait();
                             break;
 
                         case PacketsServer.JoinGame:

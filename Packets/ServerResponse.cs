@@ -1,4 +1,5 @@
-﻿using MineLib.Network;
+﻿using MineLib.Core;
+
 using ProtocolModern.Packets.Server;
 using ProtocolModern.Packets.Server.Login;
 using ProtocolModern.Packets.Server.Status;

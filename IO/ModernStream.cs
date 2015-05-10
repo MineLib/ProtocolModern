@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.Data;
+using MineLib.Core.IO;
 
 using Org.BouncyCastle.Math;
 
@@ -33,24 +34,14 @@ namespace ProtocolModern.IO
         #endregion
 
         private readonly INetworkTCP _tcp;
-        private readonly MemoryStream _mstream;
 
         private IAesStream _aesStream;
         private byte[] _buffer;
         private Encoding _encoding = Encoding.UTF8;
 
-        private readonly bool _writeToNetwork;
-
-        public ModernStream(MemoryStream stream)
-        {
-            _mstream = stream;
-            _writeToNetwork = false;
-        }
-
         public ModernStream(INetworkTCP tcp)
         {
             _tcp = tcp;
-            _writeToNetwork = true;
         }
 
 
@@ -62,23 +53,15 @@ namespace ProtocolModern.IO
         {
             _tcp.Disconnect(reuse);
         }
-        
-        public IAsyncResult BeginConnect(string ip, ushort port, AsyncCallback callback, object state)
+
+        public Task ConnectAsync(string ip, ushort port)
         {
-            return _tcp.BeginConnect(ip, port, callback, state);
-        }
-        public void EndConnect(IAsyncResult result)
-        {
-            _tcp.EndConnect(result);
+            return _tcp.ConnectAsync(ip, port);
         }
 
-        public IAsyncResult BeginDisconnect(bool reuse, AsyncCallback callback, object state)
+        public bool DisconnectAsync(bool reuse)
         {
-            return _tcp.BeginDisconnect(reuse, callback, state);
-        }
-        public void EndDisconnect(IAsyncResult result)
-        {
-            _tcp.EndDisconnect(result);
+            return _tcp.DisconnectAsync(reuse);
         }
 
 
@@ -370,116 +353,23 @@ namespace ProtocolModern.IO
             return result;
         }
 
+        // -- Read methods
 
 
-        private byte[] CompressData(byte[] data)
+        public async Task SendPacketAsync(IPacket packet)
         {
-            int dataLength = 0; // UncompressedData.Length
-
-            // -- data here is raw IPacket with Packet length.
-            using (var reader = new ModernDataReader(data))
-            {
-                var packetLength = reader.ReadVarInt();
-                var packetLengthByteLength1 = GetVarIntBytes(packetLength).Length; // -- Getting size of Packet Length
-
-                var tempBuf1 = new byte[data.Length - packetLengthByteLength1];
-                Buffer.BlockCopy(data, packetLengthByteLength1, tempBuf1, 0, tempBuf1.Length); // -- Creating data without Packet Length
-
-                packetLength = tempBuf1.Length + GetVarIntBytes(tempBuf1.Length).Length; // -- Get first Packet length
-
-                // -- Handling this data like normal
-                if (packetLength >= ModernCompressionThreshold) // if Packet length > threshold, compress
-                {
-                    using (var outputStream = new MemoryStream())
-                    using (var inputStream = new DeflaterOutputStream(outputStream, new Deflater(0)))
-                    {
-                        inputStream.Write(tempBuf1, 0, tempBuf1.Length);
-                        inputStream.Finish();
-
-                        tempBuf1 = outputStream.ToArray();
-                    }
-
-                    dataLength = tempBuf1.Length;
-                    packetLength = dataLength + GetVarIntBytes(tempBuf1.Length).Length; // calculate new packet length
-                }
-
-
-                var packetLengthByteLength = GetVarIntBytes(packetLength);
-                var dataLengthByteLength = GetVarIntBytes(dataLength);
-
-                var tempBuf2 = new byte[tempBuf1.Length + packetLengthByteLength.Length + dataLengthByteLength.Length];
-
-                Buffer.BlockCopy(packetLengthByteLength, 0, tempBuf2, 0, packetLengthByteLength.Length);
-                Buffer.BlockCopy(dataLengthByteLength, 0, tempBuf2, packetLengthByteLength.Length, dataLengthByteLength.Length);
-                Buffer.BlockCopy(tempBuf1, 0, tempBuf2, packetLengthByteLength.Length + dataLengthByteLength.Length, tempBuf1.Length);
-
-                return tempBuf2;
-            }
+            packet.WritePacket(this);
+            Purge(true);
         }
 
 
-        public IAsyncResult BeginSendPacket(IPacket packet, AsyncCallback callback, object state)
+        public void SendPacket(ref IPacket packet)
         {
-            using(var ms = new MemoryStream())
-            using (var stream = new ModernStream(ms))
-            {
-                packet.WritePacket(stream);
-                var data = ms.ToArray();
-
-                if (ModernCompressionEnabled)
-                    data = CompressData(data);
-
-                return BeginSend(data, callback, state);
-            }
-        }
-
-        public IAsyncResult BeginSend(byte[] data, AsyncCallback callback, object state)
-        {
-            if (EncryptionEnabled)
-                return _aesStream.BeginWrite(data, 0, data.Length, callback, state);
-            else
-                return _tcp.BeginSend(data, 0, data.Length, callback, state);
-        }
-        public void EndSend(IAsyncResult asyncResult)
-        {
-            if (EncryptionEnabled)
-                _aesStream.EndWrite(asyncResult);
-            else
-                _tcp.EndSend(asyncResult);
-        }
-
-
-        public IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
-        {
-            if (EncryptionEnabled)
-                return _aesStream.BeginRead(buffer, offset, count, callback, state);
-            else
-                return _tcp.BeginReceive(buffer, offset, count, callback, state);
-        }
-        public int EndRead(IAsyncResult asyncResult)
-        {
-            if (EncryptionEnabled)
-                return _aesStream.EndRead(asyncResult);
-            else
-                return _tcp.EndReceive(asyncResult);
-        }
-
-
-        public void SendPacket(IPacket packet)
-        {
-            using (var ms = new MemoryStream())
-            using (var stream = new ModernStream(ms))
-            {
-                packet.WritePacket(stream);
-                var data = ms.ToArray();
-
-                if (ModernCompressionEnabled)
-                    data = CompressData(data);
-
-                Send(data, 0, data.Length);
-            }
+            packet.WritePacket(this);
+            Purge(false);
         }
         
+
         private void Send(byte[] buffer, int offset, int count)
         {
             if (EncryptionEnabled)
@@ -495,18 +385,33 @@ namespace ProtocolModern.IO
                 return _tcp.Receive(buffer, offset, count);
         }
 
+        public Task SendAsync(byte[] buffer, int offset, int count)
+        {
+            if (EncryptionEnabled)
+                return _aesStream.WriteAsync(buffer, offset, count);
+            else
+                return _tcp.SendAsync(buffer, offset, count);
+        }
+        public Task<int> ReadAsync(byte[] buffer, int offset, int count)
+        {
+            if (EncryptionEnabled)
+                return _aesStream.ReadAsync(buffer, offset, count);
+            else
+                return _tcp.ReceiveAsync(buffer, offset, count);
+        }
+        
 
         #region Purge
 
-        public void Purge()
+        private void Purge(bool async = false)
         {
             if (ModernCompressionEnabled)
-                PurgeModernWithCompression();
+                PurgeModernWithCompression(async);
             else
-                PurgeModernWithoutCompression();
+                PurgeModernWithoutCompression(async);
         }
 
-        private void PurgeModernWithoutCompression()
+        private void PurgeModernWithoutCompression(bool async = false)
         {
             var lenBytes = GetVarIntBytes(_buffer.Length);
 
@@ -515,16 +420,15 @@ namespace ProtocolModern.IO
             Buffer.BlockCopy(lenBytes, 0, tempBuff, 0, lenBytes.Length);
             Buffer.BlockCopy(_buffer, 0, tempBuff, lenBytes.Length, _buffer.Length);
 
-
-            if (_writeToNetwork)
-                Send(tempBuff, 0, tempBuff.Length);
+            if (async)
+                SendAsync(tempBuff, 0, tempBuff.Length);
             else
-                _mstream.Write(tempBuff, 0, tempBuff.Length);
+                Send(tempBuff, 0, tempBuff.Length);
 
             _buffer = null;
         }
 
-        private void PurgeModernWithCompression()
+        private void PurgeModernWithCompression(bool async = false)
         {
             int packetLength = 0; // -- data.Length + GetVarIntBytes(data.Length).Length
             int dataLength = 0; // -- UncompressedData.Length
@@ -554,14 +458,15 @@ namespace ProtocolModern.IO
             var tempBuf = new byte[data.Length + packetLengthByteLength.Length + dataLengthByteLength.Length];
 
             Buffer.BlockCopy(packetLengthByteLength, 0, tempBuf, 0, packetLengthByteLength.Length);
-            Buffer.BlockCopy(dataLengthByteLength, 0, tempBuf, packetLengthByteLength.Length, dataLengthByteLength.Length);
+            Buffer.BlockCopy(dataLengthByteLength, 0, tempBuf, packetLengthByteLength.Length,
+                dataLengthByteLength.Length);
             Buffer.BlockCopy(data, 0, tempBuf, packetLengthByteLength.Length + dataLengthByteLength.Length, data.Length);
 
-            if (_writeToNetwork)
-                Send(tempBuf, 0, tempBuf.Length);
+            if (async)
+                SendAsync(tempBuf, 0, tempBuf.Length);
             else
-                _mstream.Write(tempBuf, 0, tempBuf.Length);
-
+                Send(tempBuf, 0, tempBuf.Length);
+            
             _buffer = null;
         }
 
@@ -572,9 +477,6 @@ namespace ProtocolModern.IO
         {
             if (_tcp != null)
                 _tcp.Dispose();
-
-            if(_mstream != null)
-                _mstream.Dispose();
 
             if (_aesStream != null)
                 _aesStream.Dispose();

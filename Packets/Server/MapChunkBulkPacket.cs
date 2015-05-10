@@ -1,6 +1,7 @@
-using MineLib.Network;
-using MineLib.Network.Data.Anvil;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.Data.Anvil;
+using MineLib.Core.IO;
+
 using ProtocolModern.Data.Anvil;
 
 namespace ProtocolModern.Packets.Server
@@ -22,8 +23,7 @@ namespace ProtocolModern.Packets.Server
         {
             stream.WriteVarInt(ID);
             ChunkList.ToStream(stream);
-            stream.Purge();
-
+            
             return this;
         }
     }

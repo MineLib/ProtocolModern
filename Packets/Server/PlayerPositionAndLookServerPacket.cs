@@ -1,7 +1,9 @@
 using System;
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.IO;
+
+using MineLib.Core;
+using MineLib.Core.Data;
+using MineLib.Core.IO;
+
 using ProtocolModern.Enum;
 
 namespace ProtocolModern.Packets.Server
@@ -34,8 +36,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteFloat(Yaw);
             stream.WriteFloat(Pitch);
             stream.WriteSByte((sbyte) Flags);
-            stream.Purge();
-
+            
             return this;
         }
     }

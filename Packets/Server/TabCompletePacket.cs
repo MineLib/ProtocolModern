@@ -1,5 +1,5 @@
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
@@ -23,8 +23,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteVarInt(ID);
             stream.WriteVarInt(Count);
             stream.WriteString(Text);
-            stream.Purge();
-
+            
             return this;
         }
     }

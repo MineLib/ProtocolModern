@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-using MineLib.Network;
+using MineLib.Core;
 
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Encodings;

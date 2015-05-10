@@ -1,6 +1,7 @@
 using System;
+using System.Threading.Tasks;
 
-using MineLib.Network.IO;
+using MineLib.Core.IO;
 
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Engines;
@@ -61,24 +62,15 @@ namespace ProtocolModern.IO
         }
 
 
-        public IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+        public Task<int> ReadAsync(byte[] buffer, int offset, int count)
         {
-            return _tcp.BeginReceive(buffer, offset, count, callback, state);
-        }
-        public int EndRead(IAsyncResult asyncResult)
-        {
-            return _tcp.EndReceive(asyncResult);
+            return _tcp.ReceiveAsync(buffer, offset, count);
         }
 
-
-        public IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+        public Task WriteAsync(byte[] buffer, int offset, int count)
         {
             var encrypted = _encryptCipher.ProcessBytes(buffer, offset, count);
-            return _tcp.BeginSend(encrypted, 0, encrypted.Length, callback, state);
-        }
-        public void EndWrite(IAsyncResult asyncResult)
-        {
-            _tcp.EndSend(asyncResult);
+            return _tcp.SendAsync(encrypted, 0, encrypted.Length);
         }
 
         

@@ -1,5 +1,6 @@
-using MineLib.Network;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.IO;
+
 using ProtocolModern.Enum;
 
 namespace ProtocolModern.Packets.Server
@@ -39,8 +40,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteByte(MaxPlayers);
             stream.WriteString(LevelType);
             stream.WriteBoolean(ReducedDebugInfo);
-            stream.Purge();
-
+            
             return this;
         }
     }

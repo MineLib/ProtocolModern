@@ -1,7 +1,6 @@
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.Data.Structs;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.Data.Structs;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
@@ -28,8 +27,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteSByte(WindowId);
             stream.WriteShort(Slot);
             SlotData.ToStream(stream);
-            stream.Purge();
-
+            
             return this;
         }
     }

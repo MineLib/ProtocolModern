@@ -1,6 +1,6 @@
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.Data;
+using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
@@ -30,8 +30,7 @@ namespace ProtocolModern.Packets.Server
             Coordinates.ToStreamInt(stream);
             stream.WriteFloat(Volume);
             stream.WriteByte(Pitch);
-            stream.Purge();
-
+            
             return this;
         }
     }

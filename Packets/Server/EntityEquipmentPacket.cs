@@ -1,7 +1,7 @@
-using MineLib.Network;
-using MineLib.Network.Data;
-using MineLib.Network.Data.Structs;
-using MineLib.Network.IO;
+using MineLib.Core;
+using MineLib.Core.Data.Structs;
+using MineLib.Core.IO;
+
 using ProtocolModern.Enum;
 
 namespace ProtocolModern.Packets.Server
@@ -29,8 +29,7 @@ namespace ProtocolModern.Packets.Server
             stream.WriteVarInt(EntityID);
             stream.WriteShort((short) Slot);
             Item.ToStream(stream);
-            stream.Purge();
-
+            
             return this;
         }
     }
