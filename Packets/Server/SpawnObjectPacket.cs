@@ -40,7 +40,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream) // TODO: Complete
         {
-            stream.WriteVarInt(ID);
             stream.WriteVarInt(EntityID);
             stream.WriteByte((byte) Type);
             Vector3.ToStreamIntFixedPoint(stream);

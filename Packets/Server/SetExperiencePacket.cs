@@ -22,7 +22,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteFloat(ExperienceBar);
             stream.WriteVarInt(Level);
             stream.WriteVarInt(TotalExperience);

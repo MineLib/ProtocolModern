@@ -13,6 +13,7 @@ namespace ProtocolModern.IO
     public sealed class ModernDataReader : IProtocolDataReader
     {
         private readonly Stream _stream;
+        private readonly Encoding _encoding = Encoding.UTF8;
 
         public ModernDataReader(Stream stream)
         {
@@ -31,7 +32,7 @@ namespace ProtocolModern.IO
             length = ReadVarInt();
             var stringBytes = ReadByteArray(length);
 
-            return Encoding.UTF8.GetString(stringBytes, 0, stringBytes.Length);
+            return _encoding.GetString(stringBytes, 0, stringBytes.Length);
         }
 
         // -- VarInt

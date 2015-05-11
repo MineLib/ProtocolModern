@@ -358,6 +358,7 @@ namespace ProtocolModern.IO
 
         public async Task SendPacketAsync(IPacket packet)
         {
+            WriteVarInt(packet.ID);
             packet.WritePacket(this);
             Purge(true);
         }
@@ -365,6 +366,7 @@ namespace ProtocolModern.IO
 
         public void SendPacket(ref IPacket packet)
         {
+            WriteVarInt(packet.ID);
             packet.WritePacket(this);
             Purge(false);
         }

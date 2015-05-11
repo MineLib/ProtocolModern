@@ -30,7 +30,6 @@ namespace ProtocolModern.Packets.Client
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteVarInt(Target);
             stream.WriteVarInt((byte) Type);
 

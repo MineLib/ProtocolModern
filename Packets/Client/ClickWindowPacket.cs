@@ -29,7 +29,6 @@ namespace ProtocolModern.Packets.Client
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteByte(WindowID);
             stream.WriteShort(Slot);
             stream.WriteByte(Button);

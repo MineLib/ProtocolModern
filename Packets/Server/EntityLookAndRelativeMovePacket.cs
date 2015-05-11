@@ -27,7 +27,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteVarInt(EntityID);
             DeltaVector3.ToStreamSByteFixedPoint(stream);
             stream.WriteSByte(Yaw);

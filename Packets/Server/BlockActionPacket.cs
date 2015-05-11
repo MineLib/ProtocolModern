@@ -135,7 +135,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             Location.ToStreamLong(stream);
             BlockAction.ToStream(stream);
             

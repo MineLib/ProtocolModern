@@ -222,7 +222,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteVarInt((byte) Action);
             stream.WriteVarInt(Length);
             stream.WriteBigInteger(UUID);

@@ -14,7 +14,6 @@ namespace ProtocolModern.Packets.Client.Status
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             
             return this;
         }

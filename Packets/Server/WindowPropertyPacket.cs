@@ -22,7 +22,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteByte(WindowId);
             stream.WriteShort(PropertyId);
             stream.WriteShort(Value);

@@ -27,7 +27,6 @@ namespace ProtocolModern.Packets
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteVarInt(ProtocolVersion);
             stream.WriteString(ServerAddress);
             stream.WriteUShort(ServerPort);

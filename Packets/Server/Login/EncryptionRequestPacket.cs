@@ -24,7 +24,6 @@ namespace ProtocolModern.Packets.Server.Login
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteString(ServerId);
             stream.WriteVarInt(PublicKey.Length);
             stream.WriteByteArray(PublicKey);

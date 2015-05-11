@@ -31,7 +31,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             Position.ToStreamDouble(stream);
             stream.WriteFloat(Yaw);
             stream.WriteFloat(Pitch);

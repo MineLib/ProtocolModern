@@ -27,7 +27,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteInt((int) EffectID);
             Location.ToStreamLong(stream);
             stream.WriteInt(Data);

@@ -19,7 +19,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteVarInt(EntityIDs.Length);
             stream.WriteVarIntArray(EntityIDs);
             

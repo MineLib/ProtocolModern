@@ -26,7 +26,6 @@ namespace ProtocolModern.Packets.Server
     
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteInt((int) Dimension);
             stream.WriteByte((byte) Difficulty);
             stream.WriteByte((byte) GameMode);

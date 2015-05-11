@@ -18,7 +18,6 @@ namespace ProtocolModern.Packets.Client.Login
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteString(Name);
             
             return this;

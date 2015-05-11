@@ -25,7 +25,6 @@ namespace ProtocolModern.Packets.Client
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             Location.ToStreamLong(stream);
             stream.WriteString(Text[0]);
             stream.WriteString(Text[1]);

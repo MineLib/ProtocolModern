@@ -24,7 +24,6 @@ namespace ProtocolModern.Packets.Client
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteFloat(Sideways);
             stream.WriteFloat(Forward);
             stream.WriteByte((byte) Flags);

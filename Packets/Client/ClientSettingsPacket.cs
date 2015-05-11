@@ -29,7 +29,6 @@ namespace ProtocolModern.Packets.Client
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteString(Locale);
             stream.WriteByte(ViewDistance);
             stream.WriteByte((byte) ChatFlags);

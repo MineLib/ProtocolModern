@@ -25,7 +25,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteString(SoundName);
             Coordinates.ToStreamInt(stream);
             stream.WriteFloat(Volume);

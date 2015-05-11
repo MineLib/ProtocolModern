@@ -23,7 +23,6 @@ namespace ProtocolModern.Packets.Server.Login
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteVarInt(Threshold);
             
             return this;

@@ -38,7 +38,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteVarInt(ItemDamage);
             stream.WriteSByte(Scale);
             IconList.ToStream(stream);

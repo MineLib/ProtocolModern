@@ -22,7 +22,6 @@ namespace ProtocolModern.Packets.Client.Login
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteVarInt(SharedSecret.Length);
             stream.WriteByteArray(SharedSecret);
             stream.WriteVarInt(VerificationToken.Length);

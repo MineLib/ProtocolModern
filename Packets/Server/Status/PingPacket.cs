@@ -18,7 +18,6 @@ namespace ProtocolModern.Packets.Server.Status
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteLong(Time);
             
             return this;

@@ -26,7 +26,6 @@ namespace ProtocolModern.Packets.Client
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteDouble(X);
             stream.WriteDouble(FeetY);
             stream.WriteDouble(Z);

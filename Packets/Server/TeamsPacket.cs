@@ -177,7 +177,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteString(TeamName);
             stream.WriteByte((byte) Action);
             Team.ToStream(stream);

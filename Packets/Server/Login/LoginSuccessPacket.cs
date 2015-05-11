@@ -20,7 +20,6 @@ namespace ProtocolModern.Packets.Server.Login
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteString(UUID);
             stream.WriteString(Username);
             

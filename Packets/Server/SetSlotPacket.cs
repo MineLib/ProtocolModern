@@ -23,7 +23,6 @@ namespace ProtocolModern.Packets.Server
     
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteSByte(WindowId);
             stream.WriteShort(Slot);
             SlotData.ToStream(stream);

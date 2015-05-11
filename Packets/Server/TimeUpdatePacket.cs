@@ -20,7 +20,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteLong(AgeOfTheWorld);
             stream.WriteLong(TimeOfDay);
             

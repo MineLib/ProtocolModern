@@ -24,7 +24,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteString(Channel);
             stream.WriteVarInt(Data.Length);
             stream.WriteByteArray(Data);

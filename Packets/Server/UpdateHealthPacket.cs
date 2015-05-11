@@ -22,7 +22,6 @@ namespace ProtocolModern.Packets.Server
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteFloat(Health);
             stream.WriteVarInt(Food);
             stream.WriteFloat(FoodSaturation);

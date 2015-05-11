@@ -23,7 +23,6 @@ namespace ProtocolModern.Packets.Client
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteVarInt(ID);
             stream.WriteString(Text);
             stream.WriteBoolean(HasPosition);
             LookedAtBlock.ToStreamLong(stream);
