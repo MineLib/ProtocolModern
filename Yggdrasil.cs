@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
@@ -22,16 +23,19 @@ namespace ProtocolModern
     public static partial class Yggdrasil
     {
         /// <summary>
-        ///     Authenticates a user using his password.
+        /// Authenticates a user using his password.
         /// </summary>
         /// <param name="username">Login</param>
         /// <param name="password">Password</param>
         /// <returns></returns>
-        public static YggdrasilAnswer Login(string username, string password)
+        public static async Task<YggdrasilAnswer> Login(string username, string password)
         {
             try
             {
-                var request = (HttpWebRequest) WebRequest.Create(new Uri("https://authserver.mojang.com/authenticate"));
+                var request = WebRequest.Create(new Uri("https://authserver.mojang.com/authenticate")) as HttpWebRequest;
+                if (request == null)
+                    return new YggdrasilAnswer { Status = YggdrasilStatus.Error };
+                
                 request.ContentType = "application/json";
                 request.Method = "POST";
 
@@ -41,36 +45,41 @@ namespace ProtocolModern
                         Agent = Agent.Minecraft,
                         Username = username,
                         Password = password
+                        // "clientToken": "client identifier"     // optional
                     });
 
-                var stream = request.EndGetRequestStream(request.BeginGetRequestStream(null, null));
-                using (var writer = new StreamWriter(stream))
-                    writer.Write(json);
+                using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
+                //using (var writer = new StreamWriter(await request.GetRequestStreamAsync()))
+                    await writer.WriteAsync(json);
 
-                var resp = request.EndGetResponse(request.BeginGetResponse(null, null));
+                using (var resp = await request.GetResponseAsync().ConfigureAwait(false))
+                //using (var resp = await request.GetResponseAsync())
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
                 {
-                    var response = JsonConvert.DeserializeObject<Response>(reader.ReadToEnd());
-                    return new YggdrasilAnswer {Status = YggdrasilStatus.Success, Response = response};
+                    var response = JsonConvert.DeserializeObject<Response>(await reader.ReadToEndAsync());
+                    return new YggdrasilAnswer { Status = YggdrasilStatus.Success, Response = response };
                 }
             }
             catch (WebException e)
             {
-                return HandleWebException(e);
+                return HandleWebException(e).Result;
             }
         }
 
         /// <summary>
-        ///     Refreshes a valid accessToken.
+        /// Refreshes a valid accessToken.
         /// </summary>
         /// <param name="accessToken"></param>
         /// <param name="clientToken"></param>
         /// <returns></returns>
-        public static YggdrasilAnswer RefreshSession(string accessToken, string clientToken)
+        public static async Task<YggdrasilAnswer> RefreshSession(string accessToken, string clientToken)
         {
             try
             {
-                var request = (HttpWebRequest)WebRequest.Create(new Uri("https://authserver.mojang.com/refresh"));
+                var request = WebRequest.Create(new Uri("https://authserver.mojang.com/refresh")) as HttpWebRequest;
+                if (request == null)
+                    return new YggdrasilAnswer { Status = YggdrasilStatus.Error };
+
                 request.ContentType = "application/json";
                 request.Method = "POST";
 
@@ -81,45 +90,46 @@ namespace ProtocolModern
                         ClientToken = clientToken,
                     });
 
-                var stream = request.EndGetRequestStream(request.BeginGetRequestStream(null, null));
-                using (var writer = new StreamWriter(stream))
-                    writer.Write(json);
+                using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
+                    await writer.WriteAsync(json);
 
-                var resp = request.EndGetResponse(request.BeginGetResponse(null, null));
+                var resp = await request.GetResponseAsync().ConfigureAwait(false);
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
                 {
-                    var response = JsonConvert.DeserializeObject<Response>(reader.ReadToEnd());
+                    var response = JsonConvert.DeserializeObject<Response>(await reader.ReadToEndAsync());
                     return new YggdrasilAnswer { Status = YggdrasilStatus.Success, Response = response };
                 }
             }
             catch (WebException e)
             {
-                return HandleWebException(e);
+                return HandleWebException(e).Result;
             }
         }
 
         /// <summary>
-        ///     Checks if an accessToken is a valid session token with a currently-active session.
+        /// Checks if an accessToken is a valid session token with a currently-active session.
         /// </summary>
         /// <param name="accessToken"></param>
         /// <returns></returns>
-        public static bool VerifySession(string accessToken)
+        public static async Task<bool> VerifySession(string accessToken)
         {
             try
             {
-                var request = (HttpWebRequest)WebRequest.Create(new Uri("https://authserver.mojang.com/validate"));
+                var request = WebRequest.Create(new Uri("https://authserver.mojang.com/validate")) as HttpWebRequest;
+                if (request == null)
+                    return false;
+
                 request.ContentType = "application/json";
                 request.Method = "POST";
 
                 var json = JsonConvert.SerializeObject(new JsonVerifySession { AccessToken = accessToken });
 
-                var stream = request.EndGetRequestStream(request.BeginGetRequestStream(null, null));
-                using (var writer = new StreamWriter(stream))
-                    writer.Write(json);
+                using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
+                    await writer.WriteAsync(json);
 
-                var resp = request.EndGetResponse(request.BeginGetResponse(null, null));
+                var resp = await request.GetResponseAsync().ConfigureAwait(false);
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                    return string.IsNullOrEmpty(reader.ReadToEnd());
+                    return string.IsNullOrEmpty(await reader.ReadToEndAsync());
             }
             catch (WebException)
             {
@@ -128,16 +138,19 @@ namespace ProtocolModern
         }
 
         /// <summary>
-        ///     Invalidates accessTokens using an account's username and password
+        /// Invalidates accessTokens using an account's username and password
         /// </summary>
         /// <param name="username">Login</param>
         /// <param name="password">Password</param>
         /// <returns></returns>
-        public static bool Logout(string username, string password)
+        public static async Task<bool> Logout(string username, string password)
         {
             try
             {
-                var request = (HttpWebRequest)WebRequest.Create(new Uri("https://authserver.mojang.com/signout"));
+                var request = WebRequest.Create(new Uri("https://authserver.mojang.com/signout")) as HttpWebRequest;
+                if (request == null)
+                    return false;
+
                 request.ContentType = "application/json";
                 request.Method = "POST";
 
@@ -148,13 +161,12 @@ namespace ProtocolModern
                         Password = password
                     });
 
-                var stream = request.EndGetRequestStream(request.BeginGetRequestStream(null, null));
-                using (var writer = new StreamWriter(stream))
-                    writer.Write(json);
+                using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
+                    await writer.WriteAsync(json);
 
-                var resp = request.EndGetResponse(request.BeginGetResponse(null, null));
+                var resp = await request.GetResponseAsync().ConfigureAwait(false);
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                    return string.IsNullOrEmpty(reader.ReadToEnd());
+                    return string.IsNullOrEmpty(await reader.ReadToEndAsync());
             }
             catch (WebException)
             {
@@ -163,16 +175,19 @@ namespace ProtocolModern
         }
 
         /// <summary>
-        ///     Invalidates accessTokens using a client/access token pair.
+        /// Invalidates accessTokens using a client/access token pair.
         /// </summary>
         /// <param name="accessToken"></param>
         /// <param name="clientToken"></param>
         /// <returns></returns>
-        public static bool Invalidate(string accessToken, string clientToken)
+        public static async Task<bool> Invalidate(string accessToken, string clientToken)
         {
             try
             {
-                var request = (HttpWebRequest)WebRequest.Create(new Uri("https://authserver.mojang.com/signout"));
+                var request = WebRequest.Create(new Uri("https://authserver.mojang.com/invalidate")) as HttpWebRequest;
+                if (request == null)
+                    return false;
+
                 request.ContentType = "application/json";
                 request.Method = "POST";
 
@@ -183,13 +198,12 @@ namespace ProtocolModern
                         ClientToken = clientToken
                     });
 
-                var stream = request.EndGetRequestStream(request.BeginGetRequestStream(null, null));
-                using (var writer = new StreamWriter(stream))
-                    writer.Write(json);
+                using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
+                    await writer.WriteAsync(json);
 
-                var resp = request.EndGetResponse(request.BeginGetResponse(null, null));
+                var resp = await request.GetResponseAsync().ConfigureAwait(false);
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                    return string.IsNullOrEmpty(reader.ReadToEnd());
+                    return string.IsNullOrEmpty(await reader.ReadToEndAsync());
             }
             catch (WebException)
             {
@@ -198,13 +212,13 @@ namespace ProtocolModern
         }
 
         /// <summary>
-        ///     Both server and client need to make a request to sessionserver.mojang.com if the server is in online-mode.
+        /// Both server and client need to make a request to sessionserver.mojang.com if the server is in online-mode.
         /// </summary>
         /// <param name="accessToken"></param>
         /// <param name="selectedProfile"></param>
         /// <param name="serverHash"></param>
         /// <returns></returns>
-        public static bool ClientAuth(string accessToken, string selectedProfile, string serverHash)
+        public static async Task<bool> JoinSession(string accessToken, string selectedProfile, string serverHash)
         {
             try
             {
@@ -220,13 +234,16 @@ namespace ProtocolModern
                         ServerID = serverHash
                     });
 
-                var stream = request.EndGetRequestStream(request.BeginGetRequestStream(null, null));
-                using (var writer = new StreamWriter(stream))
-                    writer.Write(json);
+                using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
+                    await writer.WriteAsync(json).ConfigureAwait(false);
 
-                var resp = request.EndGetResponse(request.BeginGetResponse(null, null));
+                using (var resp = await request.GetResponseAsync().ConfigureAwait(false))
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                    return string.IsNullOrEmpty(reader.ReadToEnd());
+                {
+                    //request.Abort();
+
+                    return string.IsNullOrEmpty(await reader.ReadToEndAsync().ConfigureAwait(false));
+                }                   
             }
             catch (WebException)
             {
@@ -234,13 +251,20 @@ namespace ProtocolModern
             }
         }
 
-        private static YggdrasilAnswer HandleWebException(WebException e)
-        {
-            //if (e.Status != WebExceptionStatus.ProtocolError)
-            //    return new YggdrasilAnswer { Status = YggdrasilStatus.Error };
 
-            using (var response = (HttpWebResponse)e.Response)
+        private static async Task<YggdrasilAnswer> HandleWebException(WebException e)
+        {
+            // That code would break in case they ever change the underlying value.
+            const int ProtocolError = 7;
+            if ((int) e.Status != ProtocolError)
+                return new YggdrasilAnswer { Status = YggdrasilStatus.Error };
+
+            using (var response = e.Response as HttpWebResponse)
             {
+                if (response == null)
+                    return new YggdrasilAnswer { Status = YggdrasilStatus.Error };
+
+
                 if (response.StatusCode != HttpStatusCode.Forbidden)
                     return new YggdrasilAnswer { Status = YggdrasilStatus.Blocked };
 
@@ -252,7 +276,7 @@ namespace ProtocolModern
 
                 using (var sr = new StreamReader(response.GetResponseStream()))
                 {
-                    string result = sr.ReadToEnd();
+                    var result = await sr.ReadToEndAsync();
 
                     if (!response.ContentType.Contains("application/json"))
                         return new YggdrasilAnswer { Status = YggdrasilStatus.Error };

@@ -1,4 +1,4 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -7,9 +7,9 @@ namespace ProtocolModern.Packets.Client
 {
     public struct SteerVehiclePacket : IPacket
     {
-        public float Sideways;
-        public float Forward;
-        public SteerVehicle Flags;
+        public float Sideways { get; set; }
+        public float Forward { get; set; }
+        public SteerVehicle Flags { get; set; }
 
         public byte ID { get { return 0x0C; } }
 

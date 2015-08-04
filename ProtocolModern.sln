@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtocolModern", "ProtocolModern.csproj", "{CEBA6FFC-494A-43A2-8847-8EFA99D88605}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MineLib.Core", "MineLib.Core\MineLib.Core.csproj", "{121AAB68-F93F-4DA5-A0E4-87515E2C0256}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fNbt.Portable", "MineLib.Core\fNbt\fNbt\fNbt.Portable.csproj", "{22AC9F07-35CA-4E0E-B3B8-4A8E719DF529}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CEBA6FFC-494A-43A2-8847-8EFA99D88605}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEBA6FFC-494A-43A2-8847-8EFA99D88605}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEBA6FFC-494A-43A2-8847-8EFA99D88605}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEBA6FFC-494A-43A2-8847-8EFA99D88605}.Release|Any CPU.Build.0 = Release|Any CPU
+		{121AAB68-F93F-4DA5-A0E4-87515E2C0256}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{121AAB68-F93F-4DA5-A0E4-87515E2C0256}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{121AAB68-F93F-4DA5-A0E4-87515E2C0256}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{121AAB68-F93F-4DA5-A0E4-87515E2C0256}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22AC9F07-35CA-4E0E-B3B8-4A8E719DF529}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22AC9F07-35CA-4E0E-B3B8-4A8E719DF529}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22AC9F07-35CA-4E0E-B3B8-4A8E719DF529}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22AC9F07-35CA-4E0E-B3B8-4A8E719DF529}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

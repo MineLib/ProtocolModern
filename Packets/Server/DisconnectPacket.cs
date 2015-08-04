@@ -1,11 +1,11 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
     public struct DisconnectPacket : IPacket
     {
-        public string Reason;
+        public string Reason { get; set; }
 
         public byte ID { get { return 0x40; } }
 

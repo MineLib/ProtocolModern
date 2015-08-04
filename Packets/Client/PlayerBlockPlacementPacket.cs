@@ -1,6 +1,5 @@
-using MineLib.Core;
 using MineLib.Core.Data;
-using MineLib.Core.Data.Structs;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -9,19 +8,19 @@ namespace ProtocolModern.Packets.Client
 {
     public struct PlayerBlockPlacementPacket : IPacket
     {
-        public Position Location;
-        public Direction Direction;
-        public ItemStack Slot;
-        public Position CursorVector3;
+        public Position Location { get; set; }
+        public Direction Direction { get; set; }
+        public ItemStack Slot { get; set; }
+        public Position CursorVector3 { get; set; }
 
         public byte ID { get { return 0x08; } }
 
         public IPacket ReadPacket(IProtocolDataReader reader)
         {
             Location = Position.FromReaderLong(reader);
-            Direction = (Direction) reader.ReadByte();
+            Direction = (Direction) reader.ReadSByte();
             Slot = ItemStack.FromReader(reader);
-            CursorVector3 = Vector3.FromReaderByte(reader);
+            CursorVector3 = Vector3.FromReaderSByte(reader);
 
             return this;
         }
@@ -29,9 +28,9 @@ namespace ProtocolModern.Packets.Client
         public IPacket WritePacket(IProtocolStream stream)
         {
             Location.ToStreamLong(stream);
-            stream.WriteByte((byte) Direction);
+            stream.WriteSByte((sbyte) Direction);
             Slot.ToStream(stream);
-            CursorVector3.ToStreamByte(stream);
+            CursorVector3.ToStreamSByte(stream);
             
             return this;
         }

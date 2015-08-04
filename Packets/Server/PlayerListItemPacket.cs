@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 
 using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
+using MineLib.Core.Wrappers;
 
 using Org.BouncyCastle.Math;
 

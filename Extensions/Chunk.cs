@@ -3,13 +3,13 @@
 using System;
 using System.Collections.Generic;
 
-using MineLib.Core;
 using MineLib.Core.Data;
 using MineLib.Core.Data.Anvil;
 using MineLib.Core.Data.Structs;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
-namespace ProtocolModern.Data.Anvil
+namespace ProtocolModern.Extensions
 {
     public static class ChunkExtention
     {
@@ -60,9 +60,7 @@ namespace ProtocolModern.Data.Anvil
             return chunk;
         }
 
-        public static void ToStream(this Chunk chunk, IProtocolStream stream)
-        {
-        }
+        public static void ToStream(this Chunk chunk, IProtocolStream stream) { }
     }
 
     public static class ChunkListExtention
@@ -216,9 +214,6 @@ namespace ProtocolModern.Data.Anvil
             return chunkList;
         }
 
-        public static void ToStream(this ChunkList chunkList, IProtocolStream stream)
-        {
-
-        }
+        public static void ToStream(this ChunkList chunkList, IProtocolStream stream) { }
     }
 }

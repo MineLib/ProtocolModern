@@ -1,4 +1,4 @@
-﻿using MineLib.Core;
+﻿using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -7,8 +7,8 @@ namespace ProtocolModern.Packets.Client
 {
     public struct ResourcePackStatusPacket : IPacket
     {
-        public string Hash;
-        public ResourcePackStatus Result;
+        public string Hash { get; set; }
+        public ResourcePackStatus Result { get; set; }
 
         public byte ID { get { return 0x19; } }
 

@@ -1,4 +1,4 @@
-﻿using MineLib.Core;
+﻿using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
@@ -23,8 +23,8 @@ namespace ProtocolModern.Packets.Server
 
     public struct CombatEventEndCombat : ICombatEvent
     {
-        public int Duration;
-        public int EntityID;
+        public int Duration { get; set; }
+        public int EntityID { get; set; }
 
         public ICombatEvent FromReader(IProtocolDataReader reader)
         {
@@ -43,9 +43,9 @@ namespace ProtocolModern.Packets.Server
 
     public struct CombatEventEntityDead : ICombatEvent
     {
-        public int PlayerID;
-        public int EntityID;
-        public string Message;
+        public int PlayerID { get; set; }
+        public int EntityID { get; set; }
+        public string Message { get; set; }
 
         public ICombatEvent FromReader(IProtocolDataReader reader)
         {
@@ -66,9 +66,8 @@ namespace ProtocolModern.Packets.Server
 
     public struct CombatEventPacket : IPacket
     {
-        public int Event;
-
-        public ICombatEvent CombatEvent;
+        public int Event { get; set; }
+        public ICombatEvent CombatEvent { get; set; }
 
         public byte ID { get { return 0x42; } }
 

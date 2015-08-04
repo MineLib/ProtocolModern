@@ -1,11 +1,11 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
     public struct ChatMessagePacket : IPacket
     {
-        public string Message;
+        public string Message { get; set; }
 
         public byte ID { get { return 0x01; } }
 

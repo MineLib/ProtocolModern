@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
-using MineLib.Core;
 using MineLib.Core.Data;
-using MineLib.Core.IO;
+using MineLib.Core.Interfaces;
+using MineLib.Core.Wrappers;
 
 using Org.BouncyCastle.Math;
 
@@ -22,7 +22,6 @@ namespace ProtocolModern.IO
     {
         #region Properties
 
-        public bool Available { get { return _tcp.Available; } }
         public bool Connected { get { return _tcp != null && _tcp.Connected; } }
 
 
@@ -36,6 +35,7 @@ namespace ProtocolModern.IO
         private readonly INetworkTCP _tcp;
 
         private IAesStream _aesStream;
+        //private MemoryStream _buffer;
         private byte[] _buffer;
         private Encoding _encoding = Encoding.UTF8;
 
@@ -49,9 +49,9 @@ namespace ProtocolModern.IO
         {
             _tcp.Connect(ip, port);
         }
-        public void Disconnect(bool reuse)
+        public void Disconnect()
         {
-            _tcp.Disconnect(reuse);
+            _tcp.Disconnect();
         }
 
         public Task ConnectAsync(string ip, ushort port)
@@ -59,9 +59,9 @@ namespace ProtocolModern.IO
             return _tcp.ConnectAsync(ip, port);
         }
 
-        public bool DisconnectAsync(bool reuse)
+        public bool DisconnectAsync()
         {
-            return _tcp.DisconnectAsync(reuse);
+            return _tcp.DisconnectAsync();
         }
 
 
@@ -319,7 +319,7 @@ namespace ProtocolModern.IO
             return buffer[0]; 
         }
 
-        public VarInt ReadVarInt()
+        public VarInt ReadVarInt1()
         {
             var result = 0;
             var length = 0;
@@ -330,13 +330,32 @@ namespace ProtocolModern.IO
                 result |= (current & 0x7F) << length++ * 7;
 
                 if (length > 6)
-                    throw new InvalidDataException("Invalid varint: Too long.");
+                    throw new ProtocolException("Reading error: VarInt too long.");
 
                 if ((current & 0x80) != 0x80)
                     break;
             }
 
             return result;
+        }
+
+        public VarInt ReadVarInt()
+        {
+            uint result = 0;
+            int length = 0;
+
+            while (true)
+            {
+                var current = ReadByte();
+                result |= (current & 0x7Fu) << length++ * 7;
+
+                if (length > 5)
+                    throw new ProtocolException("Reading error: VarInt may not be longer than 28 bits.");
+
+                if ((current & 0x80) != 128)
+                    break;
+            }
+            return (int) result;
         }
 
         public byte[] ReadByteArray(int value)
@@ -356,22 +375,6 @@ namespace ProtocolModern.IO
         // -- Read methods
 
 
-        public async Task SendPacketAsync(IPacket packet)
-        {
-            WriteVarInt(packet.ID);
-            packet.WritePacket(this);
-            Purge(true);
-        }
-
-
-        public void SendPacket(ref IPacket packet)
-        {
-            WriteVarInt(packet.ID);
-            packet.WritePacket(this);
-            Purge(false);
-        }
-        
-
         private void Send(byte[] buffer, int offset, int count)
         {
             if (EncryptionEnabled)
@@ -379,6 +382,7 @@ namespace ProtocolModern.IO
             else
                 _tcp.Send(buffer, offset, count);
         }
+
         private int Receive(byte[] buffer, int offset, int count)
         {
             if (EncryptionEnabled)
@@ -387,6 +391,14 @@ namespace ProtocolModern.IO
                 return _tcp.Receive(buffer, offset, count);
         }
 
+        public void SendPacket(ref IPacket packet)
+        {
+            WriteVarInt(packet.ID);
+            packet.WritePacket(this);
+            Purge(false);
+        }
+
+
         public Task SendAsync(byte[] buffer, int offset, int count)
         {
             if (EncryptionEnabled)
@@ -394,12 +406,20 @@ namespace ProtocolModern.IO
             else
                 return _tcp.SendAsync(buffer, offset, count);
         }
+
         public Task<int> ReadAsync(byte[] buffer, int offset, int count)
         {
             if (EncryptionEnabled)
                 return _aesStream.ReadAsync(buffer, offset, count);
             else
                 return _tcp.ReceiveAsync(buffer, offset, count);
+        }
+
+        public async Task SendPacketAsync(IPacket packet)
+        {
+            WriteVarInt(packet.ID);
+            packet.WritePacket(this);
+            Purge(true);
         }
         
 
@@ -457,28 +477,30 @@ namespace ProtocolModern.IO
             var packetLengthByteLength = GetVarIntBytes(packetLength);
             var dataLengthByteLength = GetVarIntBytes(dataLength);
 
-            var tempBuf = new byte[data.Length + packetLengthByteLength.Length + dataLengthByteLength.Length];
+            var tempBuff = new byte[data.Length + packetLengthByteLength.Length + dataLengthByteLength.Length];
 
-            Buffer.BlockCopy(packetLengthByteLength, 0, tempBuf, 0, packetLengthByteLength.Length);
-            Buffer.BlockCopy(dataLengthByteLength, 0, tempBuf, packetLengthByteLength.Length,
-                dataLengthByteLength.Length);
-            Buffer.BlockCopy(data, 0, tempBuf, packetLengthByteLength.Length + dataLengthByteLength.Length, data.Length);
+            Buffer.BlockCopy(packetLengthByteLength, 0, tempBuff, 0, packetLengthByteLength.Length);
+            Buffer.BlockCopy(dataLengthByteLength, 0, tempBuff, packetLengthByteLength.Length, dataLengthByteLength.Length);
+            Buffer.BlockCopy(data, 0, tempBuff, packetLengthByteLength.Length + dataLengthByteLength.Length, data.Length);
 
             if (async)
-                SendAsync(tempBuf, 0, tempBuf.Length);
+                SendAsync(tempBuff, 0, tempBuff.Length);
             else
-                Send(tempBuf, 0, tempBuf.Length);
+                Send(tempBuff, 0, tempBuff.Length);
             
             _buffer = null;
         }
 
         #endregion
 
-
         public void Dispose()
         {
+            // Do not dispose it.
             if (_tcp != null)
+            {
+                _tcp.DisconnectAsync();
                 _tcp.Dispose();
+            }
 
             if (_aesStream != null)
                 _aesStream.Dispose();

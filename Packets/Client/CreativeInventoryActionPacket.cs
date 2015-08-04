@@ -1,13 +1,13 @@
-using MineLib.Core;
-using MineLib.Core.Data.Structs;
+using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
     public struct CreativeInventoryActionPacket : IPacket
     {
-        public short Slot;
-        public ItemStack ClickedItem;
+        public short Slot { get; set; }
+        public ItemStack ClickedItem { get; set; }
 
         public byte ID { get { return 0x10; } }
 

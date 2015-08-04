@@ -1,11 +1,11 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
     public struct PlayerPacket : IPacket
     {
-        public bool OnGround;
+        public bool OnGround { get; set; }
 
         public byte ID { get { return 0x03; } }
 

@@ -1,7 +1,5 @@
-﻿using MineLib.Core;
+﻿using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
-
-using ProtocolModern.Packets.Server.Login;
 
 namespace ProtocolModern.Packets.Server
 {

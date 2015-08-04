@@ -1,11 +1,11 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client.Status
 {
     public struct PingPacket : IPacket
     {
-        public long Time;
+        public long Time { get; set; }
 
         public byte ID { get { return 0x01; } }
 

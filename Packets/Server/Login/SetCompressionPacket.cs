@@ -1,13 +1,8 @@
-﻿using MineLib.Core;
+﻿using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server.Login
 {
-    public interface ISetCompressionPacket : IPacket
-    {
-        int Threshold { get; set; }
-    }
-
     public struct SetCompressionPacket : ISetCompressionPacket
     {
         public int Threshold { get; set; }

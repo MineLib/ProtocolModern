@@ -1,4 +1,4 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -7,8 +7,8 @@ namespace ProtocolModern.Packets.Server
 {
     public struct AnimationPacket : IPacket
     {
-        public int EntityID;
-        public Animation Animation;
+        public int EntityID { get; set; }
+        public Animation Animation { get; set; }
 
         public byte ID { get { return 0x0B; } }
 

@@ -1,6 +1,8 @@
 using MineLib.Core;
 using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
+using MineLib.Core.Wrappers;
 
 namespace ProtocolModern.Packets.Server
 {

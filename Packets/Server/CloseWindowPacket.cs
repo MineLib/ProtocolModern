@@ -1,11 +1,11 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
     public struct CloseWindowPacket : IPacket
     {
-        public byte WindowID;
+        public byte WindowID { get; set; }
 
         public byte ID { get { return 0x2E; } }
 

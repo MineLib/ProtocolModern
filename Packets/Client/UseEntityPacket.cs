@@ -1,4 +1,5 @@
-using MineLib.Core;
+using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -7,9 +8,9 @@ namespace ProtocolModern.Packets.Client
 {
     public struct UseEntityPacket : IPacket
     {
-        public int Target;
-        public UseEntity Type;
-        public float TargetX, TargetY, TargetZ;
+        public VarInt Target { get; set; }
+        public UseEntity Type { get; set; }
+        public Vector3 TargetVector { get; set; }
 
         public byte ID { get { return 0x02; } }
 
@@ -19,27 +20,18 @@ namespace ProtocolModern.Packets.Client
             Type = (UseEntity) (int) reader.ReadVarInt();
 
             if (Type == UseEntity.INTERACT_AT)
-            {
-                TargetX = reader.ReadFloat();
-                TargetY = reader.ReadFloat();
-                TargetZ = reader.ReadFloat();
-            }
-
+                TargetVector = Vector3.FromReaderFloat(reader);
+            
             return this;
         }
 
         public IPacket WritePacket(IProtocolStream stream)
         {
             stream.WriteVarInt(Target);
-            stream.WriteVarInt((byte) Type);
+            stream.WriteVarInt((int) Type);
 
             if (Type == UseEntity.INTERACT_AT)
-            {
-                stream.WriteFloat(TargetX);
-                stream.WriteFloat(TargetY);
-                stream.WriteFloat(TargetZ);
-            }
-
+                TargetVector.ToStreamFloat(stream);
             
             return this;
         }

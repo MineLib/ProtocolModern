@@ -1,13 +1,13 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
     public struct AttachEntityPacket : IPacket
     {
-        public int EntityID;
-        public int VehicleID;
-        public bool Leash;
+        public int EntityID { get; set; }
+        public int VehicleID { get; set; }
+        public bool Leash { get; set; }
 
         public byte ID { get { return 0x1B; } }
 

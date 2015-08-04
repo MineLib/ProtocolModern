@@ -1,11 +1,11 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client.Login
 {
     public struct LoginStartPacket : IPacket
     {
-        public string Name;
+        public string Name { get; set; }
 
         public byte ID { get { return 0x00; } }
 

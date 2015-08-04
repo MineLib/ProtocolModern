@@ -1,11 +1,11 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
     public struct HeldItemChangePacket : IPacket
     {
-        public short Slot;
+        public short Slot { get; set; }
 
         public byte ID { get { return 0x09; } }
 

@@ -1,13 +1,13 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server.Login
 {
     public struct EncryptionRequestPacket : IPacket
     {
-        public string ServerId;
-        public byte[] PublicKey;
-        public byte[] VerificationToken;
+        public string ServerId { get; set; }
+        public byte[] PublicKey { get; set; }
+        public byte[] VerificationToken { get; set; }
 
         public byte ID { get { return 0x01; } }
 

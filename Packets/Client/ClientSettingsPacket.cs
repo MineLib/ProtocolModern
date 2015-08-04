@@ -1,5 +1,5 @@
-using MineLib.Core;
 using MineLib.Core.Data.Structs;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -8,19 +8,19 @@ namespace ProtocolModern.Packets.Client
 {
     public struct ClientSettingsPacket : IPacket
     {
-        public string Locale;
-        public byte ViewDistance;
-        public ChatFlags ChatFlags;
-        public bool ChatColours;
-        public DisplayedSkinParts DisplayedSkinParts;
+        public string Locale { get; set; }
+        public sbyte ViewDistance { get; set; }
+        public ChatFlags ChatFlags { get; set; }
+        public bool ChatColours { get; set; }
+        public DisplayedSkinParts DisplayedSkinParts { get; set; }
 
         public byte ID { get { return 0x15; } }
 
         public IPacket ReadPacket(IProtocolDataReader reader)
         {
             Locale = reader.ReadString();
-            ViewDistance = reader.ReadByte();
-            ChatFlags = (ChatFlags) reader.ReadByte();
+            ViewDistance = reader.ReadSByte();
+            ChatFlags = (ChatFlags) reader.ReadSByte();
             ChatColours = reader.ReadBoolean();
             DisplayedSkinParts = DisplayedSkinParts.FromReader(reader);
 
@@ -30,8 +30,8 @@ namespace ProtocolModern.Packets.Client
         public IPacket WritePacket(IProtocolStream stream)
         {
             stream.WriteString(Locale);
-            stream.WriteByte(ViewDistance);
-            stream.WriteByte((byte) ChatFlags);
+            stream.WriteSByte(ViewDistance);
+            stream.WriteSByte((sbyte) ChatFlags);
             stream.WriteBoolean(ChatColours);
             DisplayedSkinParts.ToStream(stream);
             

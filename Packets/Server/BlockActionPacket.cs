@@ -1,5 +1,5 @@
-using MineLib.Core;
 using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -14,12 +14,12 @@ namespace ProtocolModern.Packets.Server
 
     public struct BlockActionNoteBlock : IBlockAction
     {
-        public int BlockType;
+        public int BlockType { get; set; }
 
-        public NoteBlockType NoteBlockType;
-        public int Pitch;
+        public NoteBlockType NoteBlockType { get; set; }
+        public int Pitch { get; set; }
 
-        public BlockActionNoteBlock(byte byte1, byte byte2, int blockType)
+        public BlockActionNoteBlock(byte byte1, byte byte2, int blockType) : this()
         {
             NoteBlockType = (NoteBlockType) byte1;
             Pitch = byte2;
@@ -41,12 +41,12 @@ namespace ProtocolModern.Packets.Server
 
     public struct BlockActionPiston : IBlockAction
     {
-        public int BlockType;
+        public int BlockType { get; set; }
 
-        public PistonState PistonState;
-        public PistonDirection PistonDirection;
+        public PistonState PistonState { get; set; }
+        public PistonDirection PistonDirection { get; set; }
 
-        public BlockActionPiston(byte byte1, byte byte2, int blockType)
+        public BlockActionPiston(byte byte1, byte byte2, int blockType) : this()
         {
             PistonState = (PistonState) byte1;
             PistonDirection = (PistonDirection) byte2;
@@ -68,12 +68,12 @@ namespace ProtocolModern.Packets.Server
 
     public struct BlockActionChest : IBlockAction
     {
-        public int BlockType;
+        public int BlockType { get; set; }
 
-        public byte Byte1;
-        public ChestState ChestState;
+        public byte Byte1 { get; set; }
+        public ChestState ChestState { get; set; }
 
-        public BlockActionChest(byte byte1, byte byte2, int blockType)
+        public BlockActionChest(byte byte1, byte byte2, int blockType) : this()
         {
             Byte1 = 1; // Not used - always 1.
             ChestState = (ChestState) byte2;
@@ -95,12 +95,12 @@ namespace ProtocolModern.Packets.Server
 
     public struct BlockActionPacket : IPacket
     {
-        public Position Location;
-        public byte Byte1;
-        public byte Byte2;
-        public int BlockType;
+        public Position Location { get; set; }
+        public byte Byte1 { get; set; }
+        public byte Byte2 { get; set; }
+        public int BlockType { get; set; }
 
-        public IBlockAction BlockAction;
+        public IBlockAction BlockAction { get; set; }
 
         public byte ID { get { return 0x24; } }
 

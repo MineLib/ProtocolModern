@@ -1,11 +1,11 @@
-﻿using MineLib.Core;
+﻿using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
     public struct CameraPacket : IPacket
     {
-        public int CameraID;
+        public int CameraID { get; set; }
 
         public byte ID { get { return 0x43; } }
 

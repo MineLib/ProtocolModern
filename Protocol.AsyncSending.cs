@@ -5,8 +5,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-using MineLib.Core;
 using MineLib.Core.Data.Structs;
+using MineLib.Core.Interfaces;
 
 using ProtocolModern.Enum;
 using ProtocolModern.Packets;
@@ -17,101 +17,145 @@ namespace ProtocolModern
 {
     public sealed partial class Protocol
     {
-        private Dictionary<Type, Func<ISendingAsyncArgs, Task>> SendingAsyncHandlers { get; set; }
+        private Dictionary<Type, List<Func<SendingArgs, Task>>> SendingAsyncHandlers { get; set; }
 
-        public void RegisterSending(Type sendingAsyncType, Func<ISendingAsyncArgs, Task> func)
+        public void RegisterSending(Type sendingType, Func<SendingArgs, Task> func)
         {
-            var any = sendingAsyncType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISendingAsync));
+            var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISending));
             if (!any)
-                throw new InvalidOperationException("AsyncSending type must implement MineLib.Network.IAsyncSending");
+                throw new InvalidOperationException("Type type must implement MineLib.Network.ISending");
 
-            SendingAsyncHandlers[sendingAsyncType] = func;
+            if (SendingAsyncHandlers.ContainsKey(sendingType))
+                SendingAsyncHandlers[sendingType].Add(func);
+            else
+                SendingAsyncHandlers.Add(sendingType, new List<Func<SendingArgs, Task>> { func });
+        }
+
+        public void DeregisterSending(Type sendingType, Func<SendingArgs, Task> func)
+        {
+            var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISending));
+            if (!any)
+                throw new InvalidOperationException("Type type must implement MineLib.Network.ISending");
+
+            if (SendingAsyncHandlers.ContainsKey(sendingType))
+                SendingAsyncHandlers[sendingType].Remove(func);
         }
         
+        public void DoSending(Type sendingType, SendingArgs args)
+        {
+            var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISending));
+            if (!any)
+                throw new InvalidOperationException("Type type must implement MineLib.Network.ISending");
+
+            args.RegisterSending(SendPacket, SendPacketAsync);
+
+            if (SendingAsyncHandlers.ContainsKey(sendingType))
+                foreach (var func in SendingAsyncHandlers[sendingType])
+                    func(args);
+        }
+
+
         private void RegisterSupportedSendings()
         {
-            RegisterSending(typeof(ConnectToServerAsync), ConnectToServerAsync);
-            RegisterSending(typeof(KeepAliveAsync), KeepAliveAsync);
-            RegisterSending(typeof(SendClientInfoAsync), SendClientInfoAsync);
-            RegisterSending(typeof(RespawnAsync), RespawnAsync);
-            RegisterSending(typeof(PlayerMovedAsync), PlayerMovedAsync);
-            RegisterSending(typeof(PlayerSetRemoveBlockAsync), PlayerSetRemoveBlockAsync);
-            RegisterSending(typeof(SendMessageAsync), SendMessageAsync);
-            RegisterSending(typeof(PlayerHeldItemAsync), PlayerHeldItemAsync);
-        }
-
-        public Task DoSendingAsync(Type sendingAsyncType, ISendingAsyncArgs args)
-        {
-            var any = sendingAsyncType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISendingAsync));
-            if (!any)
-                throw new InvalidOperationException("AsyncSending type must implement MineLib.Network.IAsyncSending");
-
-            return SendingAsyncHandlers[sendingAsyncType](args);
-        }
-
-        public void DoSending(Type sendingType, ISendingAsyncArgs args)
-        {
-            var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISendingAsync));
-            if (!any)
-                throw new InvalidOperationException("AsyncSending type must implement MineLib.Network.IAsyncSending");
-
-            SendingAsyncHandlers[sendingType](args).Wait();
+            RegisterSending(typeof(ConnectToServer), ConnectToServerAsync);
+            RegisterSending(typeof(KeepAlive), KeepAliveAsync);
+            RegisterSending(typeof(SendClientInfo), SendClientInfoAsync);
+            RegisterSending(typeof(Respawn), RespawnAsync);
+            RegisterSending(typeof(PlayerMoved), PlayerMovedAsync);
+            RegisterSending(typeof(PlayerSetRemoveBlock), PlayerSetRemoveBlockAsync);
+            RegisterSending(typeof(SendMessage), SendMessageAsync);
+            RegisterSending(typeof(PlayerHeldItem), PlayerHeldItemAsync);
         }
 
 
+        #region InnerSending
 
-        private async Task ConnectToServerAsync(ISendingAsyncArgs args)
+        private async Task ConnectToServerAsync1(SendingArgs args)
         {
-            var data = (ConnectToServerAsyncArgs) args;
+            var data = (ConnectToServerArgs) args;
 
-            State = ConnectionState.Joining;
-
-            await SendPacketAsync(new HandshakePacket
+            await args.SendPacketAsync(new HandshakePacket
             {
                 ProtocolVersion = 47,
-                ServerAddress = _minecraft.ServerHost,
-                ServerPort = _minecraft.ServerPort,
+                ServerAddress = Minecraft.ServerHost,
+                ServerPort = Minecraft.ServerPort,
                 NextState = NextState.Login,
             });
 
-            await SendPacketAsync(new LoginStartPacket { Name = _minecraft.ClientUsername });
+            await args.SendPacketAsync(new LoginStartPacket { Name = Minecraft.ClientUsername });
         }
 
-        private Task KeepAliveAsync(ISendingAsyncArgs args)
+        private async Task ConnectToServerAsync(SendingArgs args) // Forge
         {
-            var data = (KeepAliveAsyncArgs) args;
+            var data = (ConnectToServerArgs) args;
 
-            return SendPacketAsync(new KeepAlivePacket { KeepAlive = data.KeepAlive });
+            await args.SendPacketAsync(new HandshakePacket
+            {
+                ServerAddress = data.ServerHost + "\0FML\0",
+                ServerPort = Minecraft.ServerPort,
+                ProtocolVersion = data.Protocol,
+                NextState = NextState.Login
+            });
+
+            await args.SendPacketAsync(new LoginStartPacket { Name = data.Username });
+
+
+            //await SendPacketAsync(GetFMLFakeLoginPacket());
+            //await SendPacketAsync(new ClientStatusPacket { Status = ClientStatus.Respawn});
         }
 
-        private Task SendClientInfoAsync(ISendingAsyncArgs args)
+        private static IPacket GetFMLFakeLoginPacket()
         {
-            var data = (SendClientInfoAsyncArgs) args;
+            var input = Encoding.UTF8.GetBytes("FML");
+            var murmur3 = new MurmurHash3_32();
+            var FML_HASH = BitConverter.ToInt32(murmur3.ComputeHash(input), 0);
 
-            return SendPacketAsync(new PluginMessagePacket
+            // Always reset compat to zero before sending our fake packet
+            Packets.Server.JoinGamePacket fake = new Packets.Server.JoinGamePacket();
+            // Hash FML using a simple function
+            fake.EntityID = FML_HASH;
+            // The FML protocol version
+            fake.Dimension = (Dimension) 2;
+            fake.GameMode = (GameMode) 0;
+            fake.LevelType = "DunnoLol";
+            return fake;
+        }
+
+        private Task KeepAliveAsync(SendingArgs args)
+        {
+            var data = (KeepAliveArgs) args;
+
+            return args.SendPacketAsync(new KeepAlivePacket { KeepAlive = data.KeepAlive });
+        }
+
+        private Task SendClientInfoAsync(SendingArgs args)
+        {
+            var data = (SendClientInfoArgs) args;
+
+            return args.SendPacketAsync(new PluginMessagePacket
             {
                 Channel = "MC|Brand",
-                Data = Encoding.UTF8.GetBytes(_minecraft.ClientBrand)
+                Data = Encoding.UTF8.GetBytes(Minecraft.ClientBrand)
             });
         }
 
-        private Task RespawnAsync(ISendingAsyncArgs args)
+        private Task RespawnAsync(SendingArgs args)
         {
-            var data = (RespawnAsyncArgs) args;
+            var data = (RespawnArgs) args;
 
-            return SendPacketAsync(new ClientStatusPacket { Status = ClientStatus.Respawn });
+            return args.SendPacketAsync(new ClientStatusPacket { Status = ClientStatus.Respawn });
         }
 
-        private Task PlayerMovedAsync(ISendingAsyncArgs args)
+        private Task PlayerMovedAsync(SendingArgs args)
         {
-            var data = (PlayerMovedAsyncArgs)args;
+            var data = (PlayerMovedArgs)args;
             switch (data.Mode)
             {
                 case PlaverMovedMode.OnGround:
                 {
                     var pdata = (PlaverMovedDataOnGround) data.Data;
 
-                    return SendPacketAsync(new PlayerPacket
+                    return args.SendPacketAsync(new PlayerPacket
                     {
                         OnGround = pdata.OnGround
                     });
@@ -121,7 +165,7 @@ namespace ProtocolModern
                 {
                     var pdata = (PlaverMovedDataVector3) data.Data;
 
-                    return SendPacketAsync(new PlayerPositionPacket
+                    return args.SendPacketAsync(new PlayerPositionPacket
                     {
                         X =         pdata.Vector3.X,
                         FeetY =     pdata.Vector3.Y,
@@ -134,7 +178,7 @@ namespace ProtocolModern
                 {
                     var pdata = (PlaverMovedDataYawPitch) data.Data;
 
-                    return SendPacketAsync(new PlayerLookPacket
+                    return args.SendPacketAsync(new PlayerLookPacket
                     {
                         Yaw =       pdata.Yaw,
                         Pitch =     pdata.Pitch,
@@ -146,7 +190,7 @@ namespace ProtocolModern
                 {
                     var pdata = (PlaverMovedDataAll) data.Data;
 
-                    return SendPacketAsync(new PlayerPositionAndLookPacket
+                    return args.SendPacketAsync(new PlayerPositionAndLookPacket
                     {
                         X =         pdata.Vector3.X,
                         FeetY =     pdata.Vector3.Y,
@@ -162,9 +206,9 @@ namespace ProtocolModern
             }
         }
 
-        private Task PlayerSetRemoveBlockAsync(ISendingAsyncArgs args)
+        private Task PlayerSetRemoveBlockAsync(SendingArgs args)
         {
-            var data = (PlayerSetRemoveBlockAsyncArgs) args;
+            var data = (PlayerSetRemoveBlockArgs) args;
             
             switch (data.Mode)
             {
@@ -172,7 +216,7 @@ namespace ProtocolModern
                 {
                     var pdata = (PlayerSetRemoveBlockDataPlace) data.Data;
 
-                    return SendPacketAsync(new PlayerBlockPlacementPacket
+                    return args.SendPacketAsync(new PlayerBlockPlacementPacket
                     {
                         Location =              pdata.Location,
                         Slot =                  pdata.Slot,
@@ -185,7 +229,7 @@ namespace ProtocolModern
                 {
                     var pdata = (PlayerSetRemoveBlockDataDig) data.Data;
 
-                    return SendPacketAsync(new PlayerDiggingPacket
+                    return args.SendPacketAsync(new PlayerDiggingPacket
                     {
                         Status = (BlockStatus)  pdata.Status,
                         Location =              pdata.Location,
@@ -204,18 +248,20 @@ namespace ProtocolModern
             }
         }
 
-        private Task SendMessageAsync(ISendingAsyncArgs args)
+        private Task SendMessageAsync(SendingArgs args)
         {
-            var data = (SendMessageAsyncArgs) args;
+            var data = (SendMessageArgs) args;
 
-            return SendPacketAsync(new ChatMessagePacket { Message = data.Message });
+            return args.SendPacketAsync(new ChatMessagePacket { Message = data.Message });
         }
 
-        private Task PlayerHeldItemAsync(ISendingAsyncArgs args)
+        private Task PlayerHeldItemAsync(SendingArgs args)
         {
-            var data = (PlayerHeldItemAsyncArgs) args;
+            var data = (PlayerHeldItemArgs) args;
 
-            return SendPacketAsync(new HeldItemChangePacket { Slot = data.Slot });
+            return args.SendPacketAsync(new HeldItemChangePacket { Slot = data.Slot });
         }
+
+        #endregion InnerSending
     }
 }

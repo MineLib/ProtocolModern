@@ -1,94 +1,140 @@
-﻿using MineLib.Core;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+
 using MineLib.Core.Data;
 using MineLib.Core.Data.Anvil;
 using MineLib.Core.Data.Structs;
+using MineLib.Core.Interfaces;
 
 namespace ProtocolModern
 {
     public sealed partial class Protocol
     {
+        private Dictionary<Type, List<Func<IPacket, Task>>> CustomPacketHandlers { get; set; }
+
+        public void RegisterReceiving(Type packetType, Func<IPacket, Task> func) 
+        {
+            var any = packetType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(IPacket));
+            if (!any)
+                throw new InvalidOperationException("Type type must implement MineLib.Network.IPacket");
+
+            if (CustomPacketHandlers.ContainsKey(packetType))
+                CustomPacketHandlers[packetType].Add(func);
+            else
+                CustomPacketHandlers.Add(packetType, new List<Func<IPacket, Task>> {func});
+        }
+        
+        public void DeregisterReceiving(Type packetType, Func<IPacket, Task> func)
+        {
+            var any = packetType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(IPacket));
+            if (!any)
+                throw new InvalidOperationException("Type type must implement MineLib.Network.IPacket");
+
+            if (CustomPacketHandlers.ContainsKey(packetType))
+                CustomPacketHandlers[packetType].Remove(func);
+        }
+
+        public void DoReceiving(Type packetType, IPacket packet)
+        {
+            var any = packetType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(IPacket));
+            if (!any)
+                throw new InvalidOperationException("Type type must implement MineLib.Network.IPacket");
+
+            if (CustomPacketHandlers.ContainsKey(packetType))
+                foreach (var func in CustomPacketHandlers[packetType])
+                    func(packet);
+        }
+
+
+        #region InnerReceiving
+
         private void OnChatMessage(string message)
         {
-            _minecraft.DoReceiveEvent(typeof (OnChatMessage), new OnChatMessage(message));
+            Minecraft.DoReceiveEvent(typeof (OnChatMessage), new OnChatMessage(message));
         }
 
         #region Anvil
 
         private void OnChunk(Chunk chunk)
         {
-            _minecraft.DoReceiveEvent(typeof (OnChunk), new OnChunk(chunk));
+            Minecraft.DoReceiveEvent(typeof (OnChunk), new OnChunk(chunk));
         }
 
         private void OnChunkList(ChunkList chunks)
         {
-            _minecraft.DoReceiveEvent(typeof (OnChunkList), new OnChunkList(chunks));
+            Minecraft.DoReceiveEvent(typeof (OnChunkList), new OnChunkList(chunks));
         }
 
         private void OnBlockChange(Position location, int block)
         {
-            _minecraft.DoReceiveEvent(typeof(OnBlockChange), new OnBlockChange(location, block));
+            Minecraft.DoReceiveEvent(typeof(OnBlockChange), new OnBlockChange(location, block));
         }
 
         private void OnMultiBlockChange(Coordinates2D chunkLocation, Record[] records)
         {
-            _minecraft.DoReceiveEvent(typeof(OnMultiBlockChange), new OnMultiBlockChange(chunkLocation, records));
+            Minecraft.DoReceiveEvent(typeof(OnMultiBlockChange), new OnMultiBlockChange(chunkLocation, records));
         }
 
         private void OnBlockAction(Position location, int block, object blockAction)
         {
-            _minecraft.DoReceiveEvent(typeof(OnBlockAction), new OnBlockAction(location, block, blockAction));
+            Minecraft.DoReceiveEvent(typeof(OnBlockAction), new OnBlockAction(location, block, blockAction));
         }
 
         private void OnBlockBreakAction(int entityID, Position location, byte stage)
         {
-            _minecraft.DoReceiveEvent(typeof(OnBlockBreakAction), new OnBlockBreakAction(entityID, location, stage));
+            Minecraft.DoReceiveEvent(typeof(OnBlockBreakAction), new OnBlockBreakAction(entityID, location, stage));
         }
 
         #endregion
 
         private void OnPlayerPosition(Vector3 position)
         {
-            _minecraft.DoReceiveEvent(typeof (OnPlayerPosition), new OnPlayerPosition(position));
+            Minecraft.DoReceiveEvent(typeof (OnPlayerPosition), new OnPlayerPosition(position));
         }
 
         private void OnPlayerLook(Vector3 look)
         {
-            _minecraft.DoReceiveEvent(typeof (OnPlayerLook), new OnPlayerLook(look));
+            Minecraft.DoReceiveEvent(typeof (OnPlayerLook), new OnPlayerLook(look));
         }
 
         private void OnHeldItemChange(byte slot)
         {
-            _minecraft.DoReceiveEvent(typeof(OnHeldItemChange), new OnHeldItemChange(slot));
+            Minecraft.DoReceiveEvent(typeof(OnHeldItemChange), new OnHeldItemChange(slot));
         }
 
         private void OnSpawnPoint(Position location)
         {
-            _minecraft.DoReceiveEvent(typeof(OnSpawnPoint), new OnSpawnPoint(location));
+            Minecraft.DoReceiveEvent(typeof(OnSpawnPoint), new OnSpawnPoint(location));
         }
 
         private void OnUpdateHealth(float health, int food, float foodSaturation)
         {
-            _minecraft.DoReceiveEvent(typeof(OnUpdateHealth), new OnUpdateHealth(health, food, foodSaturation));
+            Minecraft.DoReceiveEvent(typeof(OnUpdateHealth), new OnUpdateHealth(health, food, foodSaturation));
         }
 
         private void OnRespawn(object gameInfo)
         {
-            _minecraft.DoReceiveEvent(typeof(OnRespawn), new OnRespawn(gameInfo));
+            Minecraft.DoReceiveEvent(typeof(OnRespawn), new OnRespawn(gameInfo));
         }
 
         private void OnAction(int entityID, int action)
         {
-            _minecraft.DoReceiveEvent(typeof(OnAction), new OnAction(entityID, action));
+            Minecraft.DoReceiveEvent(typeof(OnAction), new OnAction(entityID, action));
         }
 
         private void OnSetExperience(float experienceBar, int level, int totalExperience)
         {
-            _minecraft.DoReceiveEvent(typeof(OnSetExperience), new OnSetExperience(experienceBar, level, totalExperience));
+            Minecraft.DoReceiveEvent(typeof(OnSetExperience), new OnSetExperience(experienceBar, level, totalExperience));
         }
 
         private void OnTimeUpdate(long worldAge, long timeOfDay)
         {
-            _minecraft.DoReceiveEvent(typeof(OnTimeUpdate), new OnTimeUpdate(worldAge, timeOfDay));
+            Minecraft.DoReceiveEvent(typeof(OnTimeUpdate), new OnTimeUpdate(worldAge, timeOfDay));
         }
+
+        #endregion InnerReceiving
     }
 }

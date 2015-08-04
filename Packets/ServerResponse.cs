@@ -1,4 +1,4 @@
-﻿using MineLib.Core;
+﻿using MineLib.Core.Interfaces;
 
 using ProtocolModern.Packets.Server;
 using ProtocolModern.Packets.Server.Login;

@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 
 using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using Org.BouncyCastle.Math;
@@ -41,12 +42,15 @@ namespace ProtocolModern.IO
         {
             uint result = 0;
             int length = 0;
+
             while (true)
             {
                 var current = ReadByte();
                 result |= (current & 0x7Fu) << length++ * 7;
+
                 if (length > 5)
-                    throw new InvalidDataException("VarInt may not be longer than 28 bits.");
+                    throw new ProtocolException("Reading error: VarInt may not be longer than 28 bits.");
+
                 if ((current & 0x80) != 128)
                     break;
             }
@@ -57,12 +61,15 @@ namespace ProtocolModern.IO
         {
             uint result = 0;
             length = 0;
+
             while (true)
             {
                 var current = ReadByte();
                 result |= (current & 0x7Fu) << length++ * 7;
+
                 if (length > 5)
-                    throw new InvalidDataException("VarInt may not be longer than 60 bits.");
+                    throw new ProtocolException("Reading error: VarInt may not be longer than 60 bits.");
+
                 if ((current & 0x80) != 128)
                     break;
             }
@@ -81,12 +88,12 @@ namespace ProtocolModern.IO
 
         public sbyte ReadSByte()
         {
-            return unchecked((sbyte)ReadByte());
+            return unchecked((sbyte) ReadByte());
         }
 
         public byte ReadByte()
         {
-            return (byte)_stream.ReadByte();
+            return (byte) _stream.ReadByte();
         }
 
         // -- Short & UShort
@@ -136,14 +143,14 @@ namespace ProtocolModern.IO
         public ulong ReadULong()
         {
             return unchecked(
-                   ((ulong)ReadUShort() << 56) |
-                   ((ulong)ReadUShort() << 48) |
-                   ((ulong)ReadUShort() << 40) |
-                   ((ulong)ReadUShort() << 32) |
-                   ((ulong)ReadUShort() << 24) |
-                   ((ulong)ReadUShort() << 16) |
-                   ((ulong)ReadUShort() << 8) |
-                    (ulong)ReadUShort());
+                   ((ulong) ReadUShort() << 56) |
+                   ((ulong) ReadUShort() << 48) |
+                   ((ulong) ReadUShort() << 40) |
+                   ((ulong) ReadUShort() << 32) |
+                   ((ulong) ReadUShort() << 24) |
+                   ((ulong) ReadUShort() << 16) |
+                   ((ulong) ReadUShort() << 8) |
+                    (ulong) ReadUShort());
         }
 
         // -- BigInt & UBigInt
@@ -191,7 +198,6 @@ namespace ProtocolModern.IO
             for (var i = 0; i < value; i++)
                 myStrings[i] = ReadString();
             
-
             return myStrings;
         }
 
@@ -204,7 +210,6 @@ namespace ProtocolModern.IO
             for (var i = 0; i < value; i++)
                 myInts[i] = ReadVarInt();
             
-
             return myInts;
         }
 
@@ -217,7 +222,6 @@ namespace ProtocolModern.IO
             for (var i = 0; i < value; i++)
                 myInts[i] = ReadInt();
             
-
             return myInts;
         }
 
@@ -247,6 +251,11 @@ namespace ProtocolModern.IO
             }
 
             return myBytes;
+        }
+
+        public int BytesLeft()
+        {
+            return (int)(_stream.Length - _stream.Position);
         }
 
 

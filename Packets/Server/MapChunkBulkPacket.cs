@@ -1,8 +1,9 @@
 using MineLib.Core;
 using MineLib.Core.Data.Anvil;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
-
-using ProtocolModern.Data.Anvil;
+using MineLib.Core.Wrappers;
+using ProtocolModern.Extensions;
 
 namespace ProtocolModern.Packets.Server
 {

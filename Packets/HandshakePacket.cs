@@ -1,19 +1,19 @@
-﻿using MineLib.Core;
+﻿using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
 
 namespace ProtocolModern.Packets
 {
-    public struct HandshakePacket : IPacket
+    public class HandshakePacket : IPacket
     {
-        public int ProtocolVersion;
+        public VarInt ProtocolVersion;
         public string ServerAddress;
         public ushort ServerPort;
         public NextState NextState;
 
-        public const byte PacketID = 0x00;
-        public byte ID { get { return PacketID; } }
+        public byte ID { get { return 0x00; } }
 
         public IPacket ReadPacket(IProtocolDataReader reader)
         {
@@ -30,7 +30,7 @@ namespace ProtocolModern.Packets
             stream.WriteVarInt(ProtocolVersion);
             stream.WriteString(ServerAddress);
             stream.WriteUShort(ServerPort);
-            stream.WriteVarInt((byte) NextState);
+            stream.WriteVarInt((int) NextState);
             
             return this;
         }

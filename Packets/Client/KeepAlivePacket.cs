@@ -1,11 +1,12 @@
-using MineLib.Core;
+using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
     public struct KeepAlivePacket : IPacket
     {
-        public int KeepAlive;
+        public VarInt KeepAlive { get; set; }
 
         public byte ID { get { return 0x00; } }
 

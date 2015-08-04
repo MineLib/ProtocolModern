@@ -1,6 +1,8 @@
 ﻿using MineLib.Core;
+using MineLib.Core.Interfaces;
 
 using ProtocolModern.Enum;
+using ProtocolModern.Packets.Forge;
 using ProtocolModern.Packets.Server;
 
 namespace ProtocolModern
@@ -12,9 +14,13 @@ namespace ProtocolModern
             if(!Connected)
                 return;
 
+            DoReceiving(packet.GetType(), packet);
+                
+
+            // WTF : So slow wow
             // -- Debugging
-            //Console.WriteLine("Main ID: 0x" + string.Format("{0:X}", id));
-            //Console.WriteLine(" ");
+            //Debug.WriteLine("Main ID: 0x" + string.Format("{0:X}", id));
+            //Debug.WriteLine("");
             // -- Debugging
 
             switch (state)
@@ -54,7 +60,7 @@ namespace ProtocolModern
                     {
                         case PacketsServer.KeepAlive:
                             var keepAlivePacket = (KeepAlivePacket) packet;
-                            KeepAliveAsync(new KeepAliveAsyncArgs(keepAlivePacket.KeepAlive)).Wait();
+                            DoSending(typeof(KeepAlive), new KeepAliveArgs(keepAlivePacket.KeepAlive));
                             break;
 
                         case PacketsServer.JoinGame:
@@ -262,6 +268,17 @@ namespace ProtocolModern
                             break;
 
                         case PacketsServer.PluginMessage:
+                            var pluginMessage = (PluginMessagePacket) packet;
+                            if (pluginMessage.Channel == "REGISTER" || pluginMessage.Channel == "UNREGISTER")
+                            {
+                                if(pluginMessage.InString.Contains("FML"))
+                                    IsForge = true;
+                            }
+                            if (pluginMessage.Channel == "FML|HS")
+                            {
+                                ProcessForgePacket(pluginMessage);
+                            }
+
                             break;
 
                         case PacketsServer.Disconnect:
@@ -294,6 +311,11 @@ namespace ProtocolModern
                 default:
                     throw new ProtocolException("Connection error: Incorrect data.");
             }
+        }
+
+        private void ProcessForgePacket(PluginMessagePacket packet)
+        {
+            var proxy = new FMLProxyPacket(packet);
         }
     }
 }

@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-using MineLib.Core.IO;
+using MineLib.Core.Wrappers;
 
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Engines;
@@ -28,31 +28,12 @@ namespace ProtocolModern.IO
             _decryptCipher.Init(false, new ParametersWithIV(new KeyParameter(key), key, 0, 16));
         }
 
-
-        public int ReadByte()
-        {
-            var buff = new byte[1];
-            _tcp.Receive(buff, 0, buff.Length);
-
-            if (buff[0] == -1)
-                return buff[0];
-            else
-                return _decryptCipher.ProcessByte(buff[0])[0];
-        }
-
         public int Read(byte[] buffer, int offset, int count)
         {
             var length = _tcp.Receive(buffer, offset, count);
             var decrypted = _decryptCipher.ProcessBytes(buffer, offset, length);
             Buffer.BlockCopy(decrypted, 0, buffer, offset, decrypted.Length);
             return length;
-        }
-
-
-        public void WriteByte(byte value)
-        {
-            var encrypted = _encryptCipher.ProcessBytes(new byte[] { value }, 0, 1);
-            _tcp.Send(encrypted, 0, encrypted.Length);  
         }
 
         public void Write(byte[] buffer, int offset, int count)
@@ -62,9 +43,12 @@ namespace ProtocolModern.IO
         }
 
 
-        public Task<int> ReadAsync(byte[] buffer, int offset, int count)
+        public async Task<int> ReadAsync(byte[] buffer, int offset, int count)
         {
-            return _tcp.ReceiveAsync(buffer, offset, count);
+            var length = await _tcp.ReceiveAsync(buffer, offset, count);
+            var decrypted = _decryptCipher.ProcessBytes(buffer, offset, length);
+            Buffer.BlockCopy(decrypted, 0, buffer, offset, decrypted.Length); 
+            return length;
         }
 
         public Task WriteAsync(byte[] buffer, int offset, int count)
@@ -81,9 +65,6 @@ namespace ProtocolModern.IO
 
             if (_encryptCipher != null)
                 _encryptCipher.Reset();
-
-            if (_tcp != null)
-                _tcp.Dispose();
         }
     }
 }

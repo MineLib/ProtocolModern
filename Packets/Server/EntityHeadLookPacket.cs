@@ -1,12 +1,12 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
     public struct EntityHeadLookPacket : IPacket
     {
-        public int EntityID;
-        public sbyte HeadYaw;
+        public int EntityID { get; set; }
+        public sbyte HeadYaw { get; set; }
 
         public byte ID { get { return 0x19; } }
 

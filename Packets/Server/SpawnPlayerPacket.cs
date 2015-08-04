@@ -1,7 +1,9 @@
 using MineLib.Core;
 using MineLib.Core.Data;
 using MineLib.Core.Data.Structs;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
+using MineLib.Core.Wrappers;
 
 using Org.BouncyCastle.Math;
 

@@ -1,4 +1,4 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -7,8 +7,8 @@ namespace ProtocolModern.Packets.Server
 {
     public struct ChangeGameStatePacket : IPacket
     {
-        public GameStateReason Reason;
-        public float Value;
+        public GameStateReason Reason { get; set; }
+        public float Value { get; set; }
 
         public byte ID { get { return 0x2B; } }
 

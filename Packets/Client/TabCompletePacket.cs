@@ -1,14 +1,14 @@
-using MineLib.Core;
 using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
     public struct TabCompletePacket : IPacket
     {
-        public string Text;
-        public bool HasPosition;
-        public Position LookedAtBlock;
+        public string Text { get; set; }
+        public bool HasPosition { get; set; }
+        public Position LookedAtBlock { get; set; }
 
         public byte ID { get { return 0x14; } }
 

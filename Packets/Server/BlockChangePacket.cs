@@ -1,13 +1,13 @@
-using MineLib.Core;
 using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
     public struct BlockChangePacket : IPacket
     {
-        public Position Location;
-        public int BlockIDMeta;
+        public Position Location { get; set; }
+        public int BlockIDMeta { get; set; }
 
         public byte ID { get { return 0x23; } }
 

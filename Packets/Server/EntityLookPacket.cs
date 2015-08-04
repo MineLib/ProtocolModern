@@ -1,14 +1,14 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server
 {
     public struct EntityLookPacket : IPacket
     {
-        public int EntityID;
-        public sbyte Yaw;
-        public sbyte Pitch;
-        public bool OnGround;
+        public int EntityID { get; set; }
+        public sbyte Yaw { get; set; }
+        public sbyte Pitch { get; set; }
+        public bool OnGround { get; set; }
 
         public byte ID { get { return 0x16; } }
 

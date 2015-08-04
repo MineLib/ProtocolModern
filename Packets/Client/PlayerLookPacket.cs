@@ -1,13 +1,13 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
     public struct PlayerLookPacket : IPacket
     {
-        public float Yaw;
-        public float Pitch;
-        public bool OnGround;
+        public float Yaw { get; set; }
+        public float Pitch { get; set; }
+        public bool OnGround { get; set; }
 
         public byte ID { get { return 0x05; } }
 

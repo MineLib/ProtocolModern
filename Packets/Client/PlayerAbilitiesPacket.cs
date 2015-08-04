@@ -1,19 +1,19 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
     public struct PlayerAbilitiesPacket : IPacket
     {
-        public byte Flags;
-        public float FlyingSpeed;
-        public float WalkingSpeed;
+        public sbyte Flags { get; set; }
+        public float FlyingSpeed { get; set; }
+        public float WalkingSpeed { get; set; }
 
         public byte ID { get { return 0x13; } }
 
         public IPacket ReadPacket(IProtocolDataReader reader)
         {
-            Flags = reader.ReadByte();
+            Flags = reader.ReadSByte();
             FlyingSpeed = reader.ReadFloat();
             WalkingSpeed = reader.ReadFloat();
 
@@ -22,7 +22,7 @@ namespace ProtocolModern.Packets.Client
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteByte(Flags);
+            stream.WriteSByte(Flags);
             stream.WriteFloat(FlyingSpeed);
             stream.WriteFloat(WalkingSpeed);
             

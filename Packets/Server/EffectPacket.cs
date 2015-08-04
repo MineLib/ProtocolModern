@@ -1,5 +1,5 @@
-using MineLib.Core;
 using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -8,10 +8,10 @@ namespace ProtocolModern.Packets.Server
 {
     public struct EffectPacket : IPacket
     {
-        public EffectID EffectID;
-        public Position Location;
-        public int Data;
-        public bool DisableRelativeVolume;
+        public EffectID EffectID { get; set; }
+        public Position Location { get; set; }
+        public int Data { get; set; }
+        public bool DisableRelativeVolume { get; set; }
 
         public byte ID { get { return 0x28; } }
 

@@ -1,11 +1,11 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Server.Status
 {
     public struct ResponsePacket : IPacket
     {
-        public string Response;
+        public string Response { get; set; }
 
         public byte ID { get { return 0x00; } }
 

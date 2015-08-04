@@ -1,4 +1,4 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -7,11 +7,11 @@ namespace ProtocolModern.Packets.Server
 {
     public struct EntityEffectPacket : IPacket
     {
-        public int EntityID;
-        public EffectID EffectID;
-        public sbyte Amplifier;
-        public int Duration;
-        public bool HideParticles;
+        public int EntityID { get; set; }
+        public EffectID EffectID { get; set; }
+        public sbyte Amplifier { get; set; }
+        public int Duration { get; set; }
+        public bool HideParticles { get; set; }
 
         public byte ID { get { return 0x1D; } }
 

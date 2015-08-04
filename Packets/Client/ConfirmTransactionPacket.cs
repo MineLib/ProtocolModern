@@ -1,19 +1,19 @@
-using MineLib.Core;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
     public struct ConfirmTransactionPacket : IPacket
     {
-        public byte WindowID;
-        public short Slot;
-        public bool Accepted;
+        public sbyte WindowID { get; set; }
+        public short Slot { get; set; }
+        public bool Accepted { get; set; }
 
         public byte ID { get { return 0x0F; } }
 
         public IPacket ReadPacket(IProtocolDataReader reader)
         {
-            WindowID = reader.ReadByte();
+            WindowID = reader.ReadSByte();
             Slot = reader.ReadShort();
             Accepted = reader.ReadBoolean();
 
@@ -22,7 +22,7 @@ namespace ProtocolModern.Packets.Client
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteByte(WindowID);
+            stream.WriteSByte(WindowID);
             stream.WriteShort(Slot);
             stream.WriteBoolean(Accepted);
             

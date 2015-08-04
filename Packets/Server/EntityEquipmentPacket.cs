@@ -1,5 +1,5 @@
-using MineLib.Core;
-using MineLib.Core.Data.Structs;
+using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 using ProtocolModern.Enum;
@@ -8,9 +8,9 @@ namespace ProtocolModern.Packets.Server
 {
     public struct EntityEquipmentPacket : IPacket
     {
-        public int EntityID;
-        public EntityEquipmentSlot Slot;
-        public ItemStack Item;
+        public int EntityID { get; set; }
+        public EntityEquipmentSlot Slot { get; set; }
+        public ItemStack Item { get; set; }
 
         public byte ID { get { return 0x04; } }
 

@@ -1,27 +1,27 @@
-using MineLib.Core;
-using MineLib.Core.Data.Structs;
+using MineLib.Core.Data;
+using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
 namespace ProtocolModern.Packets.Client
 {
     public struct ClickWindowPacket : IPacket
     {
-        public byte WindowID;
-        public short Slot;
-        public byte Button;
-        public short ActionNumber;
-        public byte Mode;
-        public ItemStack ClickedItem;
+        public sbyte WindowID { get; set; }
+        public short Slot { get; set; }
+        public sbyte Button { get; set; }
+        public short ActionNumber { get; set; }
+        public sbyte Mode { get; set; }
+        public ItemStack ClickedItem { get; set; }
 
         public byte ID { get { return 0x0E; } }
 
         public IPacket ReadPacket(IProtocolDataReader reader)
         {
-            WindowID = reader.ReadByte();
+            WindowID = reader.ReadSByte();
             Slot = reader.ReadShort();
-            Button = reader.ReadByte();
+            Button = reader.ReadSByte();
             ActionNumber = reader.ReadShort();
-            Mode = reader.ReadByte();
+            Mode = reader.ReadSByte();
             ClickedItem = ItemStack.FromReader(reader);
 
             return this;
@@ -29,11 +29,11 @@ namespace ProtocolModern.Packets.Client
 
         public IPacket WritePacket(IProtocolStream stream)
         {
-            stream.WriteByte(WindowID);
+            stream.WriteSByte(WindowID);
             stream.WriteShort(Slot);
-            stream.WriteByte(Button);
+            stream.WriteSByte(Button);
             stream.WriteShort(ActionNumber);
-            stream.WriteByte(Mode);
+            stream.WriteSByte(Mode);
             ClickedItem.ToStream(stream);
             
             return this;
