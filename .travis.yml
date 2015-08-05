@@ -4,6 +4,9 @@ mono:
 
 solution: ProtocolModern.sln
 
+before_install:
+  - git submodule update --init --recursive
+  
 install:
   - nuget restore ProtocolModern.sln
 
