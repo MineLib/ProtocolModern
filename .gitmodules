@@ -1,3 +1,4 @@
 [submodule "MineLib.Core"]
 	path = MineLib.Core
 	url = https://github.com/MineLib/MineLib.Core.git
+	branch = master
