@@ -259,7 +259,7 @@
     <When Condition="!Exists('..\MineLib.Core')">
       <ItemGroup>
         <ProjectReference Include="MineLib.Core\MineLib.Core.csproj">
-          <Project>{c6be1779-61e7-4c62-989a-9fa62acb2c78}</Project>
+          <Project>{121AAB68-F93F-4DA5-A0E4-87515E2C0256}</Project>
           <Name>MineLib.Core</Name>
         </ProjectReference>
       </ItemGroup>
