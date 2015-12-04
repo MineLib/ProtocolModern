@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+
+using Aragas.Core.Data;
+using Aragas.Core.Packets;
 
 using MineLib.Core.Data;
 using MineLib.Core.Data.Anvil;
@@ -13,35 +15,35 @@ namespace ProtocolModern
 {
     public sealed partial class Protocol
     {
-        private Dictionary<Type, List<Func<IPacket, Task>>> CustomPacketHandlers { get; set; }
+        private Dictionary<Type, List<Func<ProtobufPacket, Task>>> CustomPacketHandlers { get; set; }
 
-        public void RegisterReceiving(Type packetType, Func<IPacket, Task> func) 
+        public void RegisterReceiving(Type packetType, Func<ProtobufPacket, Task> func) 
         {
-            var any = packetType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(IPacket));
+            var any = packetType.GetTypeInfo().IsSubclassOf(typeof(ProtobufPacket));
             if (!any)
-                throw new InvalidOperationException("Type type must implement MineLib.Network.IPacket");
+                throw new InvalidOperationException("Type type must implement Aragas.Core.Packets.ProtobufPacket");
 
             if (CustomPacketHandlers.ContainsKey(packetType))
                 CustomPacketHandlers[packetType].Add(func);
             else
-                CustomPacketHandlers.Add(packetType, new List<Func<IPacket, Task>> {func});
+                CustomPacketHandlers.Add(packetType, new List<Func<ProtobufPacket, Task>> {func});
         }
         
-        public void DeregisterReceiving(Type packetType, Func<IPacket, Task> func)
+        public void DeregisterReceiving(Type packetType, Func<ProtobufPacket, Task> func)
         {
-            var any = packetType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(IPacket));
+            var any = packetType.GetTypeInfo().IsSubclassOf(typeof(ProtobufPacket));
             if (!any)
-                throw new InvalidOperationException("Type type must implement MineLib.Network.IPacket");
+                throw new InvalidOperationException("Type type must implement Aragas.Core.Packets.ProtobufPacket");
 
             if (CustomPacketHandlers.ContainsKey(packetType))
                 CustomPacketHandlers[packetType].Remove(func);
         }
 
-        public void DoReceiving(Type packetType, IPacket packet)
+        public void DoReceiving(Type packetType, ProtobufPacket packet)
         {
-            var any = packetType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(IPacket));
+            var any = packetType.GetTypeInfo().IsSubclassOf(typeof(ProtobufPacket));
             if (!any)
-                throw new InvalidOperationException("Type type must implement MineLib.Network.IPacket");
+                throw new InvalidOperationException("Type type must implement Aragas.Core.Packets.ProtobufPacket");
 
             if (CustomPacketHandlers.ContainsKey(packetType))
                 foreach (var func in CustomPacketHandlers[packetType])
@@ -63,9 +65,9 @@ namespace ProtocolModern
             Minecraft.DoReceiveEvent(typeof (OnChunk), new OnChunk(chunk));
         }
 
-        private void OnChunkList(ChunkList chunks)
+        private void OnChunkArray(Chunk[] chunks)
         {
-            Minecraft.DoReceiveEvent(typeof (OnChunkList), new OnChunkList(chunks));
+            Minecraft.DoReceiveEvent(typeof (OnChunkArray), new OnChunkArray(chunks));
         }
 
         private void OnBlockChange(Position location, int block)

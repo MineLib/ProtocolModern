@@ -1,15 +1,20 @@
-﻿using MineLib.Core;
+﻿using System.Text;
+
+using Aragas.Core.Data;
+using Aragas.Core.Packets;
+
+using MineLib.Core;
 using MineLib.Core.Interfaces;
 
-using ProtocolModern.Enum;
-using ProtocolModern.Packets.Forge;
-using ProtocolModern.Packets.Server;
+using MineLib.PacketBuilder.Client.Play;
+
+using ProtocolModern.Packets;
 
 namespace ProtocolModern
 {
     public sealed partial class Protocol
     {
-        private void OnPacketHandled(int id, IPacket packet, ConnectionState state)
+        private void OnPacketHandled(int id, ProtobufPacket packet, ConnectionState state)
         {
             if(!Connected)
                 return;
@@ -29,21 +34,21 @@ namespace ProtocolModern
 
                     #region JoiningServer
 
-                    switch ((PacketsServer) id)
+                    switch ((ClientResponse.LoginPacketTypes) id)
                     {
-                        case PacketsServer.LoginDisconnect:
+                        case ClientResponse.LoginPacketTypes.Disconnect2:
                             Disconnect();
                             break;
 
-                        case PacketsServer.EncryptionRequest:
+                        case ClientResponse.LoginPacketTypes.EncryptionRequest:
                             ModernEnableEncryption(packet);
                             break;
 
-                        case PacketsServer.LoginSuccess:
+                        case ClientResponse.LoginPacketTypes.LoginSuccess:
                             State = ConnectionState.Joined;
                             break;
 
-                        case PacketsServer.SetCompressionLogin:
+                        case ClientResponse.LoginPacketTypes.SetCompression2:
                             ModernSetCompression(packet);
                             break;
                     }
@@ -56,238 +61,239 @@ namespace ProtocolModern
 
                     #region JoinedServer
 
-                    switch ((PacketsServer) id)
+                    switch ((ClientResponse.PlayPacketTypes) id)
                     {
-                        case PacketsServer.KeepAlive:
+                        case ClientResponse.PlayPacketTypes.KeepAlive:
                             var keepAlivePacket = (KeepAlivePacket) packet;
-                            DoSending(typeof(KeepAlive), new KeepAliveArgs(keepAlivePacket.KeepAlive));
+                            DoSending(typeof(KeepAlive), new KeepAliveArgs(keepAlivePacket.KeepAliveID));
                             break;
 
-                        case PacketsServer.JoinGame:
+                        case ClientResponse.PlayPacketTypes.JoinGame:
                             break;
 
-                        case PacketsServer.ChatMessage:
+                        case ClientResponse.PlayPacketTypes.ChatMessage:
                             var chatMessagePacket = (ChatMessagePacket) packet;
 
-                            OnChatMessage(chatMessagePacket.Message);
+                            OnChatMessage(chatMessagePacket.JSONData);
                             break;
 
-                        case PacketsServer.TimeUpdate:
+                        case ClientResponse.PlayPacketTypes.TimeUpdate:
                             var timeUpdatePacket = (TimeUpdatePacket) packet;
 
-                            OnTimeUpdate(timeUpdatePacket.AgeOfTheWorld, timeUpdatePacket.TimeOfDay);
+                            OnTimeUpdate(timeUpdatePacket.WorldAge, timeUpdatePacket.Timeofday);
                             break;
 
-                        case PacketsServer.EntityEquipment:
+                        case ClientResponse.PlayPacketTypes.EntityEquipment:
                             break;
 
-                        case PacketsServer.SpawnPosition:
+                        case ClientResponse.PlayPacketTypes.SpawnPosition:
 							var spawnPositionPacket = (SpawnPositionPacket)packet;
 							OnSpawnPoint(spawnPositionPacket.Location);
                             break;
 
-                        case PacketsServer.UpdateHealth:
+                        case ClientResponse.PlayPacketTypes.UpdateHealth:
                             break;
 
-                        case PacketsServer.Respawn:
+                        case ClientResponse.PlayPacketTypes.Respawn:
                             break;
 
-                        case PacketsServer.PlayerPositionAndLook:
+                        case ClientResponse.PlayPacketTypes.PlayerPositionAndLook:
                             var playerPositionAndLookPacket = (PlayerPositionAndLookPacket) packet;
 
-                            OnPlayerPosition(playerPositionAndLookPacket.Position);
-                            OnPlayerLook(playerPositionAndLookPacket.Look);
+                            OnPlayerPosition(new Vector3(playerPositionAndLookPacket.X, playerPositionAndLookPacket.Y, playerPositionAndLookPacket.Z));
+                            //OnPlayerLook(playerPositionAndLookPacket.Look);
                             break;
 
-                        case PacketsServer.HeldItemChange:
+                        case ClientResponse.PlayPacketTypes.HeldItemChange:
                             break;
 
-                        case PacketsServer.UseBed:
+                        case ClientResponse.PlayPacketTypes.UseBed:
                             break;
 
-                        case PacketsServer.Animation:
+                        case ClientResponse.PlayPacketTypes.Animation:
                             break;
 
-                        case PacketsServer.SpawnPlayer:
+                        case ClientResponse.PlayPacketTypes.SpawnPlayer:
                             break;
 
-                        case PacketsServer.CollectItem:
+                        case ClientResponse.PlayPacketTypes.CollectItem:
                             break;
 
-                        case PacketsServer.SpawnObject:
+                        case ClientResponse.PlayPacketTypes.SpawnObject:
                             break;
 
-                        case PacketsServer.SpawnMob:
+                        case ClientResponse.PlayPacketTypes.SpawnMob:
                             break;
 
-                        case PacketsServer.SpawnPainting:
+                        case ClientResponse.PlayPacketTypes.SpawnPainting:
                             break;
 
-                        case PacketsServer.SpawnExperienceOrb:
+                        case ClientResponse.PlayPacketTypes.SpawnExperienceOrb:
                             break;
 
-                        case PacketsServer.EntityVelocity:
+                        case ClientResponse.PlayPacketTypes.EntityVelocity:
                             break;
 
-                        case PacketsServer.DestroyEntities:
+                        case ClientResponse.PlayPacketTypes.DestroyEntities:
                             break;
 
-                        case PacketsServer.Entity:
+                        case ClientResponse.PlayPacketTypes.Entity:
                             break;
 
-                        case PacketsServer.EntityRelativeMove:
+                        case ClientResponse.PlayPacketTypes.EntityRelativeMove:
                             break;
 
-                        case PacketsServer.EntityLook:
+                        case ClientResponse.PlayPacketTypes.EntityLook:
                             break;
 
-                        case PacketsServer.EntityLookAndRelativeMove:
+                        case ClientResponse.PlayPacketTypes.EntityLookAndRelativeMove:
                             break;
 
-                        case PacketsServer.EntityTeleport:
+                        case ClientResponse.PlayPacketTypes.EntityTeleport:
                             break;
 
-                        case PacketsServer.EntityHeadLook:
+                        case ClientResponse.PlayPacketTypes.EntityHeadLook:
                             break;
 
-                        case PacketsServer.EntityStatus:
+                        case ClientResponse.PlayPacketTypes.EntityStatus:
                             break;
 
-                        case PacketsServer.AttachEntity:
+                        case ClientResponse.PlayPacketTypes.AttachEntity:
                             break;
 
-                        case PacketsServer.EntityMetadata:
+                        case ClientResponse.PlayPacketTypes.EntityMetadata:
                             break;
 
-                        case PacketsServer.EntityEffect:
+                        case ClientResponse.PlayPacketTypes.EntityEffect:
                             break;
 
-                        case PacketsServer.RemoveEntityEffect:
+                        case ClientResponse.PlayPacketTypes.RemoveEntityEffect:
                             break;
 
-                        case PacketsServer.SetExperience:
+                        case ClientResponse.PlayPacketTypes.SetExperience:
                             break;
 
-                        case PacketsServer.EntityProperties:
+                        case ClientResponse.PlayPacketTypes.EntityProperties:
                             break;
 
-                        case PacketsServer.ChunkData:
+                        case ClientResponse.PlayPacketTypes.ChunkData:
                             var chunkDataPacket = (ChunkDataPacket) packet;
 
-                            OnChunk(chunkDataPacket.Chunk);
+                            OnChunk(chunkDataPacket.Data);
                             break;
 
-                        case PacketsServer.MultiBlockChange:
+                        case ClientResponse.PlayPacketTypes.MultiBlockChange:
                             break;
 
-                        case PacketsServer.BlockChange:
+                        case ClientResponse.PlayPacketTypes.BlockChange:
                             break;
 
-                        case PacketsServer.BlockAction:
+                        case ClientResponse.PlayPacketTypes.BlockAction:
                             break;
 
-                        case PacketsServer.BlockBreakAnimation:
+                        case ClientResponse.PlayPacketTypes.BlockBreakAnimation:
                             break;
 
-                        case PacketsServer.MapChunkBulk:
+                        case ClientResponse.PlayPacketTypes.MapChunkBulk:
                             var mapChunkBulkPacket = (MapChunkBulkPacket) packet;
-
-                            OnChunkList(mapChunkBulkPacket.ChunkList);
+                        
+                            OnChunkArray(mapChunkBulkPacket.ChunkData);
                             break;
 
-                        case PacketsServer.Explosion:
+                        case ClientResponse.PlayPacketTypes.Explosion:
                             break;
 
-                        case PacketsServer.Effect:
+                        case ClientResponse.PlayPacketTypes.Effect:
                             break;
 
-                        case PacketsServer.SoundEffect:
+                        case ClientResponse.PlayPacketTypes.SoundEffect:
                             break;
 
-                        case PacketsServer.Particle:
+                        case ClientResponse.PlayPacketTypes.Particle:
                             break;
 
-                        case PacketsServer.ChangeGameState:
+                        case ClientResponse.PlayPacketTypes.ChangeGameState:
                             break;
 
-                        case PacketsServer.SpawnGlobalEntity:
+                        case ClientResponse.PlayPacketTypes.SpawnGlobalEntity:
                             break;
 
-                        case PacketsServer.OpenWindow:
+                        case ClientResponse.PlayPacketTypes.OpenWindow:
                             break;
 
-                        case PacketsServer.CloseWindow:
+                        case ClientResponse.PlayPacketTypes.CloseWindow:
                             break;
 
-                        case PacketsServer.SetSlot:
+                        case ClientResponse.PlayPacketTypes.SetSlot:
                             break;
 
-                        case PacketsServer.WindowItems:
+                        case ClientResponse.PlayPacketTypes.WindowItems:
                             break;
 
-                        case PacketsServer.WindowProperty:
+                        case ClientResponse.PlayPacketTypes.WindowProperty:
                             break;
 
-                        case PacketsServer.ConfirmTransaction:
+                        case ClientResponse.PlayPacketTypes.ConfirmTransaction:
                             break;
 
-                        case PacketsServer.UpdateSign:
+                        case ClientResponse.PlayPacketTypes.UpdateSign:
                             break;
 
-                        case PacketsServer.Maps:
+                        case ClientResponse.PlayPacketTypes.Maps:
                             break;
 
-                        case PacketsServer.UpdateBlockEntity:
+                        case ClientResponse.PlayPacketTypes.UpdateBlockEntity:
                             break;
 
-                        case PacketsServer.SignEditorOpen:
+                        case ClientResponse.PlayPacketTypes.SignEditorOpen:
                             break;
 
-                        case PacketsServer.Statistics:
+                        case ClientResponse.PlayPacketTypes.Statistics:
                             break;
 
-                        case PacketsServer.PlayerListItem:
+                        case ClientResponse.PlayPacketTypes.PlayerListItem:
                             break;
 
-                        case PacketsServer.PlayerAbilities:
+                        case ClientResponse.PlayPacketTypes.PlayerAbilities:
                             break;
 
-                        case PacketsServer.TabComplete:
+                        case ClientResponse.PlayPacketTypes.TabComplete:
                             break;
 
-                        case PacketsServer.ScoreboardObjective:
+                        case ClientResponse.PlayPacketTypes.ScoreboardObjective:
                             break;
 
-                        case PacketsServer.UpdateScore:
+                        case ClientResponse.PlayPacketTypes.UpdateScore:
                             break;
 
-                        case PacketsServer.DisplayScoreboard:
+                        case ClientResponse.PlayPacketTypes.DisplayScoreboard:
                             break;
 
-                        case PacketsServer.Teams:
+                        case ClientResponse.PlayPacketTypes.Teams:
                             break;
 
-                        case PacketsServer.PluginMessage:
+                        case ClientResponse.PlayPacketTypes.PluginMessage:
                             var pluginMessage = (PluginMessagePacket) packet;
                             if (pluginMessage.Channel == "REGISTER" || pluginMessage.Channel == "UNREGISTER")
                             {
-                                if(pluginMessage.InString.Contains("FML"))
+                                var inString = Encoding.UTF8.GetString(pluginMessage.Data, 0, pluginMessage.Data.Length);
+                                if (inString.Contains("FML"))
                                     IsForge = true;
                             }
-                            if (pluginMessage.Channel == "FML|HS")
-                            {
-                                ProcessForgePacket(pluginMessage);
-                            }
+                            //if (pluginMessage.Channel == "FML|HS")
+                            //{
+                            //    ProcessForgePacket(pluginMessage);
+                            //}
 
                             break;
 
-                        case PacketsServer.Disconnect:
+                        case ClientResponse.PlayPacketTypes.Disconnect:
                             Disconnect();
                             break;
 
 
 
-                        case PacketsServer.SetCompressionPlay:
+                        case ClientResponse.PlayPacketTypes.SetCompressionPlay:
                             ModernSetCompression(packet);
                             break;
                     }
@@ -300,7 +306,7 @@ namespace ProtocolModern
 
                     #region InfoRequest
 
-                    switch ((PacketsServer) id)
+                    switch ((ClientResponse.StatusPacketTypes) id)
                     {
                     }
 
@@ -313,9 +319,9 @@ namespace ProtocolModern
             }
         }
 
-        private void ProcessForgePacket(PluginMessagePacket packet)
-        {
-            var proxy = new FMLProxyPacket(packet);
-        }
+        //private void ProcessForgePacket(PluginMessagePacket packet)
+        //{
+        //    var proxy = new FMLProxyPacket(packet);
+        //}
     }
 }

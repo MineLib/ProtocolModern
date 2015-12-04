@@ -36,15 +36,120 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Extensions\Chunk.cs" />
-    <Compile Include="Extensions\Task.cs" />
+    <Compile Include="Extensions\PacketExtensions.cs" />
     <Compile Include="JavaHelper.cs" />
     <Compile Include="MojangAPI.cs" />
     <Compile Include="MojangAPI.Json.cs" />
     <Compile Include="MurMurHash3.cs" />
-    <Compile Include="Packets\Forge\FMLProxyPacket.cs" />
-    <Compile Include="Packets\Forge\IMessage.cs" />
-    <Compile Include="Packets\ISetCompressionPacket.cs" />
+    <Compile Include="Packets\ClientResponse.cs" />
+    <Compile Include="Packets\Client\Login\0x00_Disconnect2Packet.cs" />
+    <Compile Include="Packets\Client\Login\0x01_EncryptionRequestPacket.cs" />
+    <Compile Include="Packets\Client\Login\0x02_LoginSuccessPacket.cs" />
+    <Compile Include="Packets\Client\Login\0x03_SetCompression2Packet.cs" />
+    <Compile Include="Packets\Client\Play\0x00_KeepAlivePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x01_JoinGamePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x02_ChatMessagePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x03_TimeUpdatePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x04_EntityEquipmentPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x05_SpawnPositionPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x06_UpdateHealthPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x07_RespawnPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x08_PlayerPositionAndLookPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x09_HeldItemChangePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x0A_UseBedPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x0B_AnimationPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x0C_SpawnPlayerPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x0D_CollectItemPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x0E_SpawnObjectPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x0F_SpawnMobPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x10_SpawnPaintingPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x11_SpawnExperienceOrbPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x12_EntityVelocityPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x13_DestroyEntitiesPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x14_EntityPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x15_EntityRelativeMovePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x16_EntityLookPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x17_EntityLookAndRelativeMovePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x18_EntityTeleportPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x19_EntityHeadLookPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x1A_EntityStatusPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x1B_AttachEntityPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x1C_EntityMetadataPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x1D_EntityEffectPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x1E_RemoveEntityEffectPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x20_Custom_EntityPropertiesPacket - Копировать.cs" />
+    <Compile Include="Packets\Client\Play\0x22_Custom_MultiBlockChangePacket - Копировать.cs" />
+    <Compile Include="Packets\Client\Play\0x26_Custom_MapChunkBulkPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x1F_SetExperiencePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x21_ChunkDataPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x23_BlockChangePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x24_BlockActionPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x25_BlockBreakAnimationPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x27_ExplosionPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x28_EffectPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x29_SoundEffectPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x2A_ParticlePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x2B_ChangeGameStatePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x2C_SpawnGlobalEntityPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x2D_OpenWindowPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x2E_CloseWindowPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x2F_SetSlotPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x30_WindowItemsPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x31_WindowPropertyPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x32_ConfirmTransactionPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x33_UpdateSignPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x35_UpdateBlockEntityPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x36_OpenSignEditorPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x39_PlayerAbilitiesPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x3A_TabCompletePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x3B_ScoreboardObjectivePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x3C_UpdateScorePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x3D_DisplayScoreboardPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x3E_TeamsPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x3F_PluginMessagePacket.cs" />
+    <Compile Include="Packets\Client\Play\0x40_DisconnectPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x41_ServerDifficultyPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x42_CombatEventPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x43_CameraPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x46_SetCompressionPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x47_PlayerListHeaderAndFooterPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x48_ResourcePackSendPacket.cs" />
+    <Compile Include="Packets\Client\Play\0x49_UpdateEntityNBTPacket.cs" />
+    <Compile Include="Packets\Client\Status\0x00_ResponsePacket.cs" />
+    <Compile Include="Packets\Client\Status\0x01_PongPacket.cs" />
+    <Compile Include="Packets\ServerResponse.cs" />
+    <Compile Include="Packets\Server\Handshaking\0x00_HandshakePacket.cs" />
+    <Compile Include="Packets\Server\Handshaking\0xFE_LegacyServerListPingPacket.cs" />
+    <Compile Include="Packets\Server\Login\0x00_LoginStartPacket.cs" />
+    <Compile Include="Packets\Server\Login\0x01_EncryptionResponsePacket.cs" />
+    <Compile Include="Packets\Server\Play\0x00_KeepAlive2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x01_ChatMessage2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x02_UseEntityPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x03_PlayerPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x04_PlayerPositionPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x05_PlayerLookPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x06_PlayerPositionAndLook2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x07_PlayerDiggingPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x08_PlayerBlockPlacementPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x09_HeldItemChange2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x0A_Animation2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x0B_EntityActionPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x0C_SteerVehiclePacket.cs" />
+    <Compile Include="Packets\Server\Play\0x0D_CloseWindow2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x0E_ClickWindowPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x0F_ConfirmTransaction2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x10_CreativeInventoryActionPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x11_EnchantItemPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x12_UpdateSign2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x13_PlayerAbilities2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x14_TabComplete2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x15_ClientSettingsPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x16_ClientStatusPacket.cs" />
+    <Compile Include="Packets\Server\Play\0x17_PluginMessage2Packet.cs" />
+    <Compile Include="Packets\Server\Play\0x18_SpectatePacket.cs" />
+    <Compile Include="Packets\Server\Play\0x19_ResourcePackStatusPacket.cs" />
+    <Compile Include="Packets\Server\Status\0x00_RequestPacket.cs" />
+    <Compile Include="Packets\Server\Status\0x01_PingPacket.cs" />
     <Compile Include="PKCS1Signature.cs" />
     <Compile Include="Enum\Animation.cs" />
     <Compile Include="Enum\BlockActions.cs" />
@@ -67,7 +172,6 @@
     <Compile Include="Enum\Mobs.cs" />
     <Compile Include="Enum\NextState.cs" />
     <Compile Include="Enum\Objects.cs" />
-    <Compile Include="Enum\PacketsEnums.cs" />
     <Compile Include="Enum\Particle.cs" />
     <Compile Include="Enum\PlayerListAction.cs" />
     <Compile Include="Enum\PlayerPositionAndLookFlags.cs" />
@@ -79,124 +183,7 @@
     <Compile Include="Enum\UpdateBlockEntityAction.cs" />
     <Compile Include="Enum\UseEntity.cs" />
     <Compile Include="Enum\WorldBorderAction.cs" />
-    <Compile Include="IO\BouncyCastleAES.cs" />
-    <Compile Include="IO\IAesStream.cs" />
-    <Compile Include="IO\IProtocolStreamExtended.cs" />
-    <Compile Include="IO\ModernDataReader.cs" />
     <Compile Include="IO\ModernStream.cs" />
-    <Compile Include="Packets\ClientResponse.cs" />
-    <Compile Include="Packets\Client\AnimationPacket.cs" />
-    <Compile Include="Packets\Client\ChatMessagePacket.cs" />
-    <Compile Include="Packets\Client\ClickWindowPacket.cs" />
-    <Compile Include="Packets\Client\ClientSettingsPacket.cs" />
-    <Compile Include="Packets\Client\ClientStatusPacket.cs" />
-    <Compile Include="Packets\Client\CloseWindowPacket.cs" />
-    <Compile Include="Packets\Client\ConfirmTransactionPacket.cs" />
-    <Compile Include="Packets\Client\CreativeInventoryActionPacket.cs" />
-    <Compile Include="Packets\Client\EnchantItemPacket.cs" />
-    <Compile Include="Packets\Client\EntityActionPacket.cs" />
-    <Compile Include="Packets\Client\HeldItemChangePacket.cs" />
-    <Compile Include="Packets\Client\KeepAlivePacket.cs" />
-    <Compile Include="Packets\Client\Login\EncryptionResponsePacket.cs" />
-    <Compile Include="Packets\Client\Login\LoginStartPacket.cs" />
-    <Compile Include="Packets\Client\PlayerAbilitiesPacket.cs" />
-    <Compile Include="Packets\Client\PlayerBlockPlacementPacket.cs" />
-    <Compile Include="Packets\Client\PlayerDiggingPacket.cs" />
-    <Compile Include="Packets\Client\PlayerLookPacket.cs" />
-    <Compile Include="Packets\Client\PlayerPacket.cs" />
-    <Compile Include="Packets\Client\PlayerPositionAndLookPacket.cs" />
-    <Compile Include="Packets\Client\PlayerPositionPacket.cs" />
-    <Compile Include="Packets\Client\PluginMessagePacket.cs" />
-    <Compile Include="Packets\Client\ResourcePackStatusPacket.cs" />
-    <Compile Include="Packets\Client\SpectatePacket.cs" />
-    <Compile Include="Packets\Client\Status\PingPacket.cs" />
-    <Compile Include="Packets\Client\Status\RequestPacket.cs" />
-    <Compile Include="Packets\Client\SteerVehiclePacket.cs" />
-    <Compile Include="Packets\Client\TabCompletePacket.cs" />
-    <Compile Include="Packets\Client\UpdateSignPacket.cs" />
-    <Compile Include="Packets\Client\UseEntityPacket.cs" />
-    <Compile Include="Packets\HandshakePacket.cs" />
-    <Compile Include="Packets\ServerResponse.cs" />
-    <Compile Include="Packets\Server\AnimationPacket.cs" />
-    <Compile Include="Packets\Server\AttachEntityPacket.cs" />
-    <Compile Include="Packets\Server\BlockActionPacket.cs" />
-    <Compile Include="Packets\Server\BlockBreakAnimationPacket.cs" />
-    <Compile Include="Packets\Server\BlockChangePacket.cs" />
-    <Compile Include="Packets\Server\CameraPacket.cs" />
-    <Compile Include="Packets\Server\ChangeGameStatePacket.cs" />
-    <Compile Include="Packets\Server\ChatMessagePacket.cs" />
-    <Compile Include="Packets\Server\ChunkDataPacket.cs" />
-    <Compile Include="Packets\Server\CloseWindowPacket.cs" />
-    <Compile Include="Packets\Server\CollectItemPacket.cs" />
-    <Compile Include="Packets\Server\CombatEventPacket.cs" />
-    <Compile Include="Packets\Server\ConfirmTransactionPacket.cs" />
-    <Compile Include="Packets\Server\DestroyEntitiesPacket.cs" />
-    <Compile Include="Packets\Server\DisconnectPacket.cs" />
-    <Compile Include="Packets\Server\DisplayScoreboardPacket.cs" />
-    <Compile Include="Packets\Server\EffectPacket.cs" />
-    <Compile Include="Packets\Server\EntityEffectPacket.cs" />
-    <Compile Include="Packets\Server\EntityEquipmentPacket.cs" />
-    <Compile Include="Packets\Server\EntityHeadLookPacket.cs" />
-    <Compile Include="Packets\Server\EntityLookAndRelativeMovePacket.cs" />
-    <Compile Include="Packets\Server\EntityLookPacket.cs" />
-    <Compile Include="Packets\Server\EntityMetadataPacket.cs" />
-    <Compile Include="Packets\Server\EntityPacket.cs" />
-    <Compile Include="Packets\Server\EntityPropertiesPacket.cs" />
-    <Compile Include="Packets\Server\EntityRelativeMovePacket.cs" />
-    <Compile Include="Packets\Server\EntityStatusPacket.cs" />
-    <Compile Include="Packets\Server\EntityTeleportPacket.cs" />
-    <Compile Include="Packets\Server\EntityVelocityPacket.cs" />
-    <Compile Include="Packets\Server\ExplosionPacket.cs" />
-    <Compile Include="Packets\Server\HeldItemChangePacket.cs" />
-    <Compile Include="Packets\Server\JoinGamePacket.cs" />
-    <Compile Include="Packets\Server\KeepAlivePacket.cs" />
-    <Compile Include="Packets\Server\Login\EncryptionRequestPacket.cs" />
-    <Compile Include="Packets\Server\Login\LoginDisconnectPacket.cs" />
-    <Compile Include="Packets\Server\Login\LoginSuccessPacket.cs" />
-    <Compile Include="Packets\Server\Login\SetCompressionPacket.cs" />
-    <Compile Include="Packets\Server\MapChunkBulkPacket.cs" />
-    <Compile Include="Packets\Server\MapsPacket.cs" />
-    <Compile Include="Packets\Server\MultiBlockChangePacket.cs" />
-    <Compile Include="Packets\Server\OpenWindowPacket.cs" />
-    <Compile Include="Packets\Server\ParticlePacket.cs" />
-    <Compile Include="Packets\Server\PlayerAbilitiesPacket.cs" />
-    <Compile Include="Packets\Server\PlayerListHeaderFooterPacket.cs" />
-    <Compile Include="Packets\Server\PlayerListItemPacket.cs" />
-    <Compile Include="Packets\Server\PlayerPositionAndLookServerPacket.cs" />
-    <Compile Include="Packets\Server\PluginMessagePacket.cs" />
-    <Compile Include="Packets\Server\RemoveEntityEffectPacket.cs" />
-    <Compile Include="Packets\Server\ResourcePackSendPacket.cs" />
-    <Compile Include="Packets\Server\RespawnPacket.cs" />
-    <Compile Include="Packets\Server\ScoreboardObjectivePacket.cs" />
-    <Compile Include="Packets\Server\ServerDifficultyPacket.cs" />
-    <Compile Include="Packets\Server\SetCompressionPacket.cs" />
-    <Compile Include="Packets\Server\SetExperiencePacket.cs" />
-    <Compile Include="Packets\Server\SetSlotPacket.cs" />
-    <Compile Include="Packets\Server\SignEditorOpenPacket.cs" />
-    <Compile Include="Packets\Server\SoundEffectPacket.cs" />
-    <Compile Include="Packets\Server\SpawnExperienceOrbPacket.cs" />
-    <Compile Include="Packets\Server\SpawnGlobalEntityPacket.cs" />
-    <Compile Include="Packets\Server\SpawnMobPacket.cs" />
-    <Compile Include="Packets\Server\SpawnObjectPacket.cs" />
-    <Compile Include="Packets\Server\SpawnPaintingPacket.cs" />
-    <Compile Include="Packets\Server\SpawnPlayerPacket.cs" />
-    <Compile Include="Packets\Server\SpawnPositionPacket.cs" />
-    <Compile Include="Packets\Server\StatisticsPacket.cs" />
-    <Compile Include="Packets\Server\Status\PingPacket.cs" />
-    <Compile Include="Packets\Server\Status\ResponsePacket.cs" />
-    <Compile Include="Packets\Server\TabCompletePacket.cs" />
-    <Compile Include="Packets\Server\TeamsPacket.cs" />
-    <Compile Include="Packets\Server\TimeUpdatePacket.cs" />
-    <Compile Include="Packets\Server\TitlePacket.cs" />
-    <Compile Include="Packets\Server\UpdateBlockEntityPacket.cs" />
-    <Compile Include="Packets\Server\UpdateEntityNBTPacket.cs" />
-    <Compile Include="Packets\Server\UpdateHealthPacket.cs" />
-    <Compile Include="Packets\Server\UpdateScorePacket.cs" />
-    <Compile Include="Packets\Server\UpdateSignPacket.cs" />
-    <Compile Include="Packets\Server\UseBedPacket.cs" />
-    <Compile Include="Packets\Server\WindowItemsPacket.cs" />
-    <Compile Include="Packets\Server\WindowPropertyPacket.cs" />
-    <Compile Include="Packets\Server\WorldBorderPacket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol.AsyncReceive.cs" />
     <Compile Include="Protocol.AsyncSending.cs" />
@@ -207,14 +194,15 @@
     <Compile Include="Yggdrasil.cs" />
     <Compile Include="Yggdrasil.Json.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="Exists('..\packages')">
       <ItemGroup>
         <Reference Include="ICSharpCode.SharpZipLib.Portable, Version=0.86.0.51802, Culture=neutral, PublicKeyToken=null">
           <HintPath>..\packages\SharpZipLib.Portable.0.86.0.0002\lib\portable-net45+netcore45+wp8+win8+wpa81+MonoTouch+MonoAndroid\ICSharpCode.SharpZipLib.Portable.dll</HintPath>
         </Reference>
-        <Reference Include="crypto, Version=1.8.5593.24063, Culture=neutral, PublicKeyToken=null">
-          <HintPath>..\packages\Portable.BouncyCastle.1.8.0-RC1\lib\portable-net45+win8+wpa81+MonoTouch10+MonoAndroid10+xamarinmac20+xamarinios10\crypto.dll</HintPath>
+        <Reference Include="crypto, Version=1.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\Portable.BouncyCastle.1.7.0.2\lib\portable-net4+sl5+wp8+win8+wpa81+MonoTouch10+MonoAndroid10+xamarinmac20+xamarinios10\crypto.dll</HintPath>
         </Reference>
         <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
           <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\portable-net40+sl5+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
@@ -232,8 +220,8 @@
         <Reference Include="ICSharpCode.SharpZipLib.Portable, Version=0.86.0.51802, Culture=neutral, PublicKeyToken=null">
           <HintPath>packages\SharpZipLib.Portable.0.86.0.0002\lib\portable-net45+netcore45+wp8+win8+wpa81+MonoTouch+MonoAndroid\ICSharpCode.SharpZipLib.Portable.dll</HintPath>
         </Reference>
-        <Reference Include="crypto, Version=1.8.5593.24063, Culture=neutral, PublicKeyToken=null">
-          <HintPath>packages\Portable.BouncyCastle.1.8.0-RC1\lib\portable-net45+win8+wpa81+MonoTouch10+MonoAndroid10+xamarinmac20+xamarinios10\crypto.dll</HintPath>
+        <Reference Include="crypto, Version=1.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>packages\Portable.BouncyCastle.1.7.0.2\lib\portable-net4+sl5+wp8+win8+wpa81+MonoTouch10+MonoAndroid10+xamarinmac20+xamarinios10\crypto.dll</HintPath>
         </Reference>
         <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
           <HintPath>packages\Newtonsoft.Json.7.0.1\lib\portable-net40+sl5+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
@@ -259,8 +247,26 @@
     <When Condition="!Exists('..\MineLib.Core')">
       <ItemGroup>
         <ProjectReference Include="MineLib.Core\MineLib.Core.csproj">
-          <Project>{121AAB68-F93F-4DA5-A0E4-87515E2C0256}</Project>
+          <Project>{c6be1779-61e7-4c62-989a-9fa62acb2c78}</Project>
           <Name>MineLib.Core</Name>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="Exists('..\Aragas.Core')">
+      <ItemGroup>
+        <ProjectReference Include="..\Aragas.Core\Aragas.Core.csproj">
+          <Project>{468d9d51-dfe7-47a8-b0d6-52d035fc714d}</Project>
+          <Name>Aragas.Core</Name>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+    <When Condition="!Exists('..\Aragas.Core')">
+      <ItemGroup>
+        <ProjectReference Include="Aragas.Core\Aragas.Core.csproj">
+          <Project>{468d9d51-dfe7-47a8-b0d6-52d035fc714d}</Project>
+          <Name>Aragas.Core</Name>
         </ProjectReference>
       </ItemGroup>
     </When>

@@ -5,12 +5,21 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Aragas.Core.Data;
+using Aragas.Core.IO;
+using Aragas.Core.Packets;
+using Aragas.Core.Wrappers;
+
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 using MineLib.Core;
 using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
-using MineLib.Core.Wrappers;
+
+using MineLib.PacketBuilder.Client.Login;
+using MineLib.PacketBuilder.Client.Play;
+using MineLib.PacketBuilder.Server.Handshaking;
+using MineLib.PacketBuilder.Server.Login;
 
 using Newtonsoft.Json;
 
@@ -19,24 +28,26 @@ using PCLStorage;
 using ProtocolModern.Enum;
 using ProtocolModern.IO;
 using ProtocolModern.Packets;
-using ProtocolModern.Packets.Client.Login;
-using ProtocolModern.Packets.Server;
-using ProtocolModern.Packets.Server.Login;
 
 namespace ProtocolModern
 {
     public sealed partial class Protocol : IProtocol
     {
+        static Protocol()
+        {
+            Extensions.PacketExtensions.Init();
+        }
+
         #region Properties
 
-        public string Name { get { return "Modern"; } }
-        public string Version { get { return "1.8.7"; } }
+        public string Name => "Modern";
+        public string Version => "1.8.7";
 
         public ConnectionState State { get; private set; }
 
-        public bool Connected { get { return Stream != null && Stream.Connected; } }
+        public bool Connected => Stream != null && Stream.Connected;
 
-        public bool UseLogin { get { return Minecraft.UseLogin; } }
+        public bool UseLogin => Minecraft.UseLogin;
 
         public bool IsForge { get; private set; }
 
@@ -46,21 +57,12 @@ namespace ProtocolModern
         public bool SaveEntityPacketsToDisk { get; private set; }
         public bool SaveRawMapPacketsToDisk { get; private set; }
 
-        public List<IPacket> PacketsReceived { get; private set; }
-        public List<IPacket> PacketsSended { get; private set; }
-        public List<IPacket> PluginMessage { get; private set; }
+        public List<ProtobufPacket> PacketsReceived { get; private set; }
+        public List<ProtobufPacket> PacketsSended { get; private set; }
+        public List<ProtobufPacket> PluginMessage { get; private set; }
 
-        public List<IPacket> LastPackets
-        {
-            get
-            {
-                if (PacketsReceived != null)
-                    return PacketsReceived.GetRange(PacketsReceived.Count - 50, 50);
-                else
-                    return null;
-            }
-        }
-        public IPacket LastPacket { get { return PacketsReceived[PacketsReceived.Count - 1]; } }
+        public List<ProtobufPacket> LastPackets => PacketsReceived?.GetRange(PacketsReceived.Count - 50, 50);
+        public ProtobufPacket LastProtobufPacket => PacketsReceived[PacketsReceived.Count - 1];
 
         private IFolder PacketDumpFolder { get; set; }
         private IFolder PacketDumpRawFolder { get; set; }
@@ -68,39 +70,40 @@ namespace ProtocolModern
 
         #endregion
 
-        private int ReadThreadID { get; set; }
+        private IThread ReadThread { get; set; }
         private CancellationTokenSource CancellationToken { get; set; }
 
         private IMinecraftClient Minecraft { get; set; }
 
-        private IProtocolStreamExtended Stream { get; set; }
+        private ModernStream Stream { get; set; }
 
-        private bool CompressionEnabled { get { return Stream != null && Stream.ModernCompressionEnabled; } }
-        private long CompressionThreshold { get { return Stream == null ? -1 : Stream.ModernCompressionThreshold; } }
+        private bool CompressionEnabled => Stream != null && Stream.CompressionEnabled;
+        private long CompressionThreshold => Stream?.CompressionThreshold ?? -1;
 
 
         public IProtocol Initialize(IMinecraftClient client, bool debugPackets = false)
         {
             Minecraft = client;
-            Stream = new ModernStream(NetworkTCPWrapper.NewNetworkTcp());
-            SavePackets = debugPackets;
+            Stream = new ModernStream(TCPClientWrapper.CreateTCPClient());
+
+            SavePackets             = debugPackets;
             SavePacketsToDisk       = true;
             SaveEntityPacketsToDisk = false;
             SaveRawMapPacketsToDisk = false;
 
-            PacketsReceived = new List<IPacket>();
-            PacketsSended = new List<IPacket>();
-            PluginMessage = new List<IPacket>();
+            PacketsReceived = new List<ProtobufPacket>();
+            PacketsSended = new List<ProtobufPacket>();
+            PluginMessage = new List<ProtobufPacket>();
 
             SendingAsyncHandlers = new Dictionary<Type, List<Func<SendingArgs, Task>>>();
-            CustomPacketHandlers = new Dictionary<Type, List<Func<IPacket, Task>>>();
+            CustomPacketHandlers = new Dictionary<Type, List<Func<ProtobufPacket, Task>>>();
             RegisterSupportedSendings();
 
             CancellationToken = new CancellationTokenSource();
 
             var time = DateTime.Now;
-            PacketDumpFolder = FileSystemWrapper.LogFolder.CreateFolderAsync(string.Format("{0:yyyy-MM-dd_hh.mm.ss}", time), CreationCollisionOption.GenerateUniqueName).Result;
-            PacketDumpRawFolder = FileSystemWrapper.LogFolder.CreateFolderAsync(string.Format("{0:yyyy-MM-dd_hh.mm.ss}-Raw", time), CreationCollisionOption.GenerateUniqueName).Result;
+            PacketDumpFolder = FileSystemWrapper.LogFolder.CreateFolderAsync($"{time:yyyy-MM-dd_hh.mm.ss}", CreationCollisionOption.GenerateUniqueName).Result;
+            PacketDumpRawFolder = FileSystemWrapper.LogFolder.CreateFolderAsync($"{time:yyyy-MM-dd_hh.mm.ss}-Raw", CreationCollisionOption.GenerateUniqueName).Result;
 
             return this;
         }
@@ -111,7 +114,6 @@ namespace ProtocolModern
             while (!CancellationToken.IsCancellationRequested)
                 PacketReceiver();
         }
-
         private void PacketReceiver()
         {
             int packetId;
@@ -164,7 +166,7 @@ namespace ProtocolModern
                 }
                 else // (dataLength > 0)
                 {
-                    var dataLengthBytes = ModernStream.GetVarIntBytes(dataLength).Length;
+                    var dataLengthBytes = new VarInt(dataLength).InByteArray().Length;
 
                     var tempBuff = Stream.ReadByteArray(packetLength - dataLengthBytes); // -- Compressed
 
@@ -176,7 +178,7 @@ namespace ProtocolModern
                         tempBuff = outputStream.ToArray(); // -- Decompressed
 
                         packetId = tempBuff[0]; // -- Only 255 packets available. ReadVarInt doesn't work.
-                        var packetIdBytes = ModernStream.GetVarIntBytes(packetId).Length;
+                        var packetIdBytes = new VarInt(packetId).InByteArray().Length;
 
                         data = new byte[tempBuff.Length - packetIdBytes];
                         Buffer.BlockCopy(tempBuff, packetIdBytes, data, 0, data.Length);
@@ -197,19 +199,19 @@ namespace ProtocolModern
         /// <param name="data">Packet byte[] data</param>
         private void HandlePacket(int id, byte[] data)
         {
-            using (var reader = new ModernDataReader(data))
+            using (var reader = new ProtobufDataReader(data))
             {
-                var packet = default(IPacket);
+                var packet = default(ProtobufPacket);
 
                 switch (State)
                 {
                     #region Status
 
                     case ConnectionState.InfoRequest:
-                        if (ServerResponse.InfoRequest[id] == null)
+                        if (ClientResponse.StatusPacketResponses.Packets[id] == null)
                             throw new ProtocolException("Reading error: Wrong Status packet ID.");
 
-                        packet = ServerResponse.InfoRequest[id]().ReadPacket(reader);
+                        packet = ClientResponse.StatusPacketResponses.Packets[id]().ReadPacket(reader);
 
                         OnPacketHandled(id, packet, ConnectionState.InfoRequest);
                         break;
@@ -219,10 +221,10 @@ namespace ProtocolModern
                     #region Login
 
                     case ConnectionState.Joining:
-                        if (ServerResponse.JoiningServer[id] == null)
+                        if (ClientResponse.LoginPacketResponses.Packets[id] == null)
                             throw new ProtocolException("Reading error: Wrong Login packet ID.");
 
-                        packet = ServerResponse.JoiningServer[id]().ReadPacket(reader);
+                        packet = ClientResponse.LoginPacketResponses.Packets[id]().ReadPacket(reader);
 
                         OnPacketHandled(id, packet, ConnectionState.Joining);
                         break;
@@ -232,10 +234,13 @@ namespace ProtocolModern
                     #region Play
 
                     case ConnectionState.Joined:
-                        if (ServerResponse.JoinedServer[id] == null)
+                        if (ClientResponse.PlayPacketResponses.Packets[id] == null)
+                        {
+                            break;
                             throw new ProtocolException("Reading error: Wrong Play packet ID.");
+                        }
 
-                        packet = ServerResponse.JoinedServer[id]().ReadPacket(reader);
+                        packet = ClientResponse.PlayPacketResponses.Packets[id]().ReadPacket(reader);
 
                         OnPacketHandled(id, packet, ConnectionState.Joined);
                         break;
@@ -254,14 +259,14 @@ namespace ProtocolModern
             }
         }
         
-        private int _rCount = 0;
+        private int _rCount;
         private readonly Dictionary<short, int> _rCounters = new Dictionary<short, int>(); 
-        private void DumpPacketReceived(IPacket packet, byte[] data)
+        private void DumpPacketReceived(ProtobufPacket packet, byte[] data)
         {
-            if(!_rCounters.ContainsKey(packet.ID))
-                _rCounters.Add(packet.ID, 0);
+            if(!_rCounters.ContainsKey((short) packet.ID))
+                _rCounters.Add((short) packet.ID, 0);
 
-            var mainData = string.Format("{0}{1}{2}", "R" + _rCount, packet.GetType().Name.Replace("Packet", ""), _rCounters[packet.ID]);
+            var mainData = $"R{_rCount}{packet.GetType().Name.Replace("Packet", "")}{_rCounters[(short) packet.ID]}";
 
 
 
@@ -271,10 +276,10 @@ namespace ProtocolModern
                     packet is EntityStatusPacket || packet is EntityMetadataPacket || packet is EntityPropertiesPacket || packet is EntityEquipmentPacket || packet is AttachEntityPacket)
                 { _rCount++; return; }
 
-            var name = string.Format("{0}.json", mainData);
+            var name = $"{mainData}.json";
             using (var stream = PacketDumpFolder.CreateFileAsync(name, CreationCollisionOption.OpenIfExists).Result.OpenAsync(FileAccess.ReadAndWrite).Result)
             using (var writer = new StreamWriter(stream))
-                writer.Write(JsonConvert.SerializeObject(packet, Formatting.Indented, new[] { new VarIntJsonConverter() } ));
+                writer.Write(JsonConvert.SerializeObject(packet, Formatting.Indented, new VarIntJsonConverter()));
 
 
 
@@ -282,30 +287,30 @@ namespace ProtocolModern
                 if (packet is MapChunkBulkPacket || packet is ChunkDataPacket)
                 { _rCount++; return; }
 
-            var rawName = string.Format("{0}.bin", mainData);
+            var rawName = $"{mainData}.bin";
             using (var stream = PacketDumpRawFolder.CreateFileAsync(rawName, CreationCollisionOption.OpenIfExists).Result.OpenAsync(FileAccess.ReadAndWrite).Result)
             using (var writer = new BinaryWriter(stream))
                 writer.Write(data);
             
 
 
-            _rCounters[packet.ID]++;
+            _rCounters[(short) packet.ID]++;
             _rCount++;
         }
 
-        private int _sCount = 0;
+        private int _sCount;
         private readonly Dictionary<short, int> _sCounters = new Dictionary<short, int>();
-        private void DumpPacketSended(IPacket packet)
+        private void DumpPacketSended(ProtobufPacket packet)
         {
-            if (!_sCounters.ContainsKey(packet.ID))
-                _sCounters.Add(packet.ID, 0);
+            if (!_sCounters.ContainsKey((short) packet.ID))
+                _sCounters.Add((short) packet.ID, 0);
 
-            var name = string.Format("{0}{1}{2}.json", "S" + _sCount, packet.GetType().Name.Replace("Packet", ""), _sCounters[packet.ID]);
+            var name = $"S{_sCount}{packet.GetType().Name.Replace("Packet", "")}{_sCounters[(short) packet.ID]}.json";
             using (var stream = PacketDumpFolder.CreateFileAsync(name, CreationCollisionOption.OpenIfExists).Result.OpenAsync(FileAccess.ReadAndWrite).Result)
             using (var writer = new StreamWriter(stream))
-                writer.Write(JsonConvert.SerializeObject(packet, Formatting.Indented, new[] { new VarIntJsonConverter() }));
+                writer.Write(JsonConvert.SerializeObject(packet, Formatting.Indented, new VarIntJsonConverter()));
 
-            _sCounters[packet.ID]++;
+            _sCounters[(short) packet.ID]++;
             _sCount++;
         }
 
@@ -314,24 +319,24 @@ namespace ProtocolModern
         /// Enabling encryption
         /// </summary>
         /// <param name="packet">EncryptionRequestPacket</param>
-        private async void ModernEnableEncryption(IPacket packet)
+        private async void ModernEnableEncryption(ProtobufPacket packet)
         {
             var request = (EncryptionRequestPacket) packet;
             var sharedKey = PKCS1Signature.CreateSecretKey();
 
-            var hash = GetServerIDHash(request.PublicKey, sharedKey, request.ServerId);
+            var hash = GetServerIDHash(request.PublicKey, sharedKey, request.ServerID);
 
             if (!Yggdrasil.JoinSession(Minecraft.AccessToken, Minecraft.SelectedProfile, hash).Result)
                 throw new ProtocolException("Yggdrasil error: Not authenticated.");
             
             var pkcs = new PKCS1Signature(request.PublicKey);
             var signedSecret = pkcs.SignData(sharedKey);
-            var signedVerify = pkcs.SignData(request.VerificationToken);
+            var signedVerify = pkcs.SignData(request.VerifyToken);
 
             await SendPacketAsync(new EncryptionResponsePacket
             {
                 SharedSecret = signedSecret,
-                VerificationToken = signedVerify
+                VerifyToken = signedVerify
             });
 
             Stream.InitializeEncryption(sharedKey);
@@ -352,17 +357,26 @@ namespace ProtocolModern
         /// Setting compression
         /// </summary>
         /// <param name="packet">EncryptionRequestPacket</param>
-        private void ModernSetCompression(IPacket packet)
+        private void ModernSetCompression(ProtobufPacket packet)
         {
-            var request = (ISetCompressionPacket) packet;
+            if (packet is SetCompressionPacket)
+            {
+                var request = (SetCompressionPacket) packet;
 
-            Stream.SetCompression(request.Threshold);
+                Stream.SetCompression(request.Threshold);
+            }
+
+            if (packet is SetCompression2Packet)
+            {
+                var request = (SetCompression2Packet)packet;
+
+                Stream.SetCompression(request.Threshold);
+            }
         }
 
 
         #region Network
-
-
+        
         public void Connect(string host, ushort port)
         {
             if (Connected)
@@ -372,12 +386,17 @@ namespace ProtocolModern
             Stream.Connect(host, port);
 
             // -- Begin data reading.
-            if (ThreadWrapper.IsRunning(ReadThreadID))
+            if (ReadThread != null && ReadThread.IsRunning)
                 throw new ProtocolException("Connection error: Thread already running.");
             else
-                ReadThreadID = ThreadWrapper.StartThread(ReadCycle, true, "PacketReaderThread");
-        }
+            {
+                ReadThread = ThreadWrapper.CreateThread(ReadCycle);
+                ReadThread.IsBackground = true;
+                ReadThread.Name = "PacketReaderThread";
+                ReadThread.Start();
+            }
 
+        }
         public void Disconnect()
         {
             if (!Connected)
@@ -387,8 +406,7 @@ namespace ProtocolModern
 
             Stream.Disconnect();
         }
-
-        private void SendPacket(IPacket packet)
+        private void SendPacket(ProtobufPacket packet)
         {
             if (!Connected)
                 throw new ProtocolException("Connection error: Not connected to server.");
@@ -403,39 +421,42 @@ namespace ProtocolModern
             if (SavePacketsToDisk)
                 DumpPacketSended(packet);
         }
-
-
+        
         public async Task ConnectAsync(string host, ushort port)
         {
             if (Connected)
                 throw new ProtocolException("Connection error: Already connected to server.");
 
-            await Stream.ConnectAsync(host, port);
+            Stream.Connect(host, port);
 
-            if (ThreadWrapper.IsRunning(ReadThreadID))
+            if (ReadThread.IsRunning)
                 throw new ProtocolException("Connection error: Thread already running.");
             else
-                ReadThreadID = ThreadWrapper.StartThread(ReadCycle, true, "PacketReaderThread");
+            {
+                ReadThread = ThreadWrapper.CreateThread(ReadCycle);
+                ReadThread.IsBackground = true;
+                ReadThread.Name = "PacketReaderThread";
+            }
         }
-        
-        public bool DisconnectAsync()
+        public async Task<bool> DisconnectAsync()
         {
             if (!Connected)
                 throw new ProtocolException("Connection error: Not connected to server.");
 
             CancellationToken.Cancel();
 
-            return Stream.DisconnectAsync();
-        }
+            Stream.Disconnect();
 
-        private async Task SendPacketAsync(IPacket packet)
+            return false;
+        }
+        private async Task SendPacketAsync(ProtobufPacket packet)
         {
             if (!Connected)
                 throw new ProtocolException("Connection error: Not connected to server.");
 
             HandleState(packet);
 
-            await Stream.SendPacketAsync(packet);
+            Stream.SendPacket(ref packet);
 
             if (SavePackets)
                 PacketsSended.Add(packet);
@@ -443,14 +464,13 @@ namespace ProtocolModern
             if (SavePacketsToDisk)
                 DumpPacketSended(packet);
         }
-
-
-        private void HandleState(IPacket packet)
+        
+        private void HandleState(ProtobufPacket packet)
         {
             var handshake = packet as HandshakePacket;
             if (handshake != null)
             {
-                switch (handshake.NextState)
+                switch ((NextState)(int)handshake.NextState)
                 {
                     case NextState.Status:
                         State = ConnectionState.InfoRequest;
@@ -461,33 +481,23 @@ namespace ProtocolModern
                 }
             }
         }
-
-
+        
         #endregion
 
 
         public void Dispose()
         {
-            if (CancellationToken != null)
-                CancellationToken.Cancel();
-            
-            if (_rCounters != null)
-                _rCounters.Clear();
+            CancellationToken?.Cancel();
 
-            if (_sCounters != null)
-                _sCounters.Clear();
+            _rCounters?.Clear();
+            _sCounters?.Clear();
 
-            if (Stream != null)
-                Stream.Dispose();
+            Stream?.Dispose();
 
-            if (PacketsReceived != null)
-                PacketsReceived.Clear();
+            PacketsReceived?.Clear();
+            PacketsSended?.Clear();
 
-            if (PacketsSended != null)
-                PacketsSended.Clear();
-
-            if (CancellationToken != null)
-                CancellationToken.Dispose();
+            CancellationToken?.Dispose();
         }
     }
 }

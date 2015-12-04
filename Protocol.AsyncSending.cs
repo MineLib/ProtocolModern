@@ -5,13 +5,17 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+using Aragas.Core.Packets;
+
 using MineLib.Core.Data.Structs;
 using MineLib.Core.Interfaces;
 
+using MineLib.PacketBuilder.Client.Play;
+using MineLib.PacketBuilder.Server.Handshaking;
+using MineLib.PacketBuilder.Server.Login;
+using MineLib.PacketBuilder.Server.Play;
+
 using ProtocolModern.Enum;
-using ProtocolModern.Packets;
-using ProtocolModern.Packets.Client;
-using ProtocolModern.Packets.Client.Login;
 
 namespace ProtocolModern
 {
@@ -23,7 +27,7 @@ namespace ProtocolModern
         {
             var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISending));
             if (!any)
-                throw new InvalidOperationException("Type type must implement MineLib.Network.ISending");
+                throw new InvalidOperationException("Type type must implement MineLib.Core.Interfaces.ISending");
 
             if (SendingAsyncHandlers.ContainsKey(sendingType))
                 SendingAsyncHandlers[sendingType].Add(func);
@@ -35,7 +39,7 @@ namespace ProtocolModern
         {
             var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISending));
             if (!any)
-                throw new InvalidOperationException("Type type must implement MineLib.Network.ISending");
+                throw new InvalidOperationException("Type type must implement MineLib.Core.Interfaces.ISending");
 
             if (SendingAsyncHandlers.ContainsKey(sendingType))
                 SendingAsyncHandlers[sendingType].Remove(func);
@@ -45,7 +49,7 @@ namespace ProtocolModern
         {
             var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISending));
             if (!any)
-                throw new InvalidOperationException("Type type must implement MineLib.Network.ISending");
+                throw new InvalidOperationException("Type type must implement MineLib.Core.Interfaces.ISending");
 
             args.RegisterSending(SendPacket, SendPacketAsync);
 
@@ -79,7 +83,7 @@ namespace ProtocolModern
                 ProtocolVersion = 47,
                 ServerAddress = Minecraft.ServerHost,
                 ServerPort = Minecraft.ServerPort,
-                NextState = NextState.Login,
+                NextState = (int)NextState.Login,
             });
 
             await args.SendPacketAsync(new LoginStartPacket { Name = Minecraft.ClientUsername });
@@ -92,9 +96,9 @@ namespace ProtocolModern
             await args.SendPacketAsync(new HandshakePacket
             {
                 ServerAddress = data.ServerHost + "\0FML\0",
-                ServerPort = Minecraft.ServerPort,
+                ServerPort = data.Port,
                 ProtocolVersion = data.Protocol,
-                NextState = NextState.Login
+                NextState = (int)NextState.Login
             });
 
             await args.SendPacketAsync(new LoginStartPacket { Name = data.Username });
@@ -104,19 +108,19 @@ namespace ProtocolModern
             //await SendPacketAsync(new ClientStatusPacket { Status = ClientStatus.Respawn});
         }
 
-        private static IPacket GetFMLFakeLoginPacket()
+        private static ProtobufPacket GetFMLFakeLoginPacket()
         {
             var input = Encoding.UTF8.GetBytes("FML");
             var murmur3 = new MurmurHash3_32();
             var FML_HASH = BitConverter.ToInt32(murmur3.ComputeHash(input), 0);
 
             // Always reset compat to zero before sending our fake packet
-            Packets.Server.JoinGamePacket fake = new Packets.Server.JoinGamePacket();
+            JoinGamePacket fake = new JoinGamePacket();
             // Hash FML using a simple function
             fake.EntityID = FML_HASH;
             // The FML protocol version
-            fake.Dimension = (Dimension) 2;
-            fake.GameMode = (GameMode) 0;
+            fake.Dimension = 2;
+            fake.Gamemode = 0;
             fake.LevelType = "DunnoLol";
             return fake;
         }
@@ -125,7 +129,7 @@ namespace ProtocolModern
         {
             var data = (KeepAliveArgs) args;
 
-            return args.SendPacketAsync(new KeepAlivePacket { KeepAlive = data.KeepAlive });
+            return args.SendPacketAsync(new KeepAlivePacket { KeepAliveID = data.KeepAlive });
         }
 
         private Task SendClientInfoAsync(SendingArgs args)
@@ -143,7 +147,7 @@ namespace ProtocolModern
         {
             var data = (RespawnArgs) args;
 
-            return args.SendPacketAsync(new ClientStatusPacket { Status = ClientStatus.Respawn });
+            return args.SendPacketAsync(new ClientStatusPacket { ActionID = (int) ClientStatus.Respawn });
         }
 
         private Task PlayerMovedAsync(SendingArgs args)
@@ -190,7 +194,7 @@ namespace ProtocolModern
                 {
                     var pdata = (PlaverMovedDataAll) data.Data;
 
-                    return args.SendPacketAsync(new PlayerPositionAndLookPacket
+                    return args.SendPacketAsync(new PlayerPositionAndLook2Packet
                     {
                         X =         pdata.Vector3.X,
                         FeetY =     pdata.Vector3.Y,
@@ -219,9 +223,11 @@ namespace ProtocolModern
                     return args.SendPacketAsync(new PlayerBlockPlacementPacket
                     {
                         Location =              pdata.Location,
-                        Slot =                  pdata.Slot,
-                        CursorVector3 =         pdata.Crosshair,
-                        Direction = (Direction) pdata.Direction
+                        HeldItem =              pdata.Slot,
+                        CursorPositionX =       (sbyte) pdata.Crosshair.X,
+                        CursorPositionY =       (sbyte) pdata.Crosshair.Y,
+                        CursorPositionZ =       (sbyte) pdata.Crosshair.Z,
+                        Face =                  (sbyte) pdata.Direction
                     });
                 }
 
@@ -231,7 +237,7 @@ namespace ProtocolModern
 
                     return args.SendPacketAsync(new PlayerDiggingPacket
                     {
-                        Status = (BlockStatus)  pdata.Status,
+                        Status =                (sbyte) pdata.Status,
                         Location =              pdata.Location,
                         Face =                  pdata.Face
                     });
@@ -252,14 +258,14 @@ namespace ProtocolModern
         {
             var data = (SendMessageArgs) args;
 
-            return args.SendPacketAsync(new ChatMessagePacket { Message = data.Message });
+            return args.SendPacketAsync(new ChatMessagePacket { JSONData = data.Message });
         }
 
         private Task PlayerHeldItemAsync(SendingArgs args)
         {
             var data = (PlayerHeldItemArgs) args;
 
-            return args.SendPacketAsync(new HeldItemChangePacket { Slot = data.Slot });
+            return args.SendPacketAsync(new HeldItemChangePacket { Slot = (sbyte) data.Slot });
         }
 
         #endregion InnerSending

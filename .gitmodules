@@ -2,3 +2,6 @@
 	path = MineLib.Core
 	url = https://github.com/MineLib/MineLib.Core.git
 	branch = master
+[submodule "Aragas.Core"]
+	path = Aragas.Core
+	url = https://github.com/Aragas/Aragas.Core.git

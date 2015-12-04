@@ -2,17 +2,20 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
+using Aragas.Core.Packets;
+using Aragas.Core.Wrappers;
+
 using MineLib.Core.Data;
 using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
-using MineLib.Core.Wrappers;
+
+using MineLib.PacketBuilder.Client.Status;
+using MineLib.PacketBuilder.Server.Handshaking;
+using MineLib.PacketBuilder.Server.Status;
 
 using Newtonsoft.Json;
 
 using ProtocolModern.Enum;
-using ProtocolModern.Packets;
-using ProtocolModern.Packets.Client.Status;
-using ProtocolModern.Packets.Server.Status;
 
 namespace ProtocolModern
 {
@@ -38,7 +41,7 @@ namespace ProtocolModern
 
     public sealed class StatusClient : IStatusClient
     {
-        private event Action<IPacket> OnResponsePacket;
+        private event Action<ProtobufPacket> OnResponsePacket;
 
 
         public ResponseData GetResponseData(string ip, ushort port, int protocolVersion)
@@ -67,7 +70,7 @@ namespace ProtocolModern
             protocol.Dispose();
 
             if(response)
-                responseData.Ping = PingServer(ip, port).Result;
+                responseData.Ping = PingServer(ip, port);
 
             return responseData;
         }
@@ -97,7 +100,7 @@ namespace ProtocolModern
 
         public long GetPing(string ip, ushort port)
         {
-            return PingServer(ip, port).Result;
+            return PingServer(ip, port);
         }
 
 
@@ -106,7 +109,7 @@ namespace ProtocolModern
             var data = (HandshakeArgs) args;
 
             if (args.SendPacketAsync != null)
-                await args.SendPacketAsync(new HandshakePacket { ServerAddress = data.IP, ServerPort = data.Port, ProtocolVersion = data.ProtocolVersion, NextState = NextState.Status });
+                await args.SendPacketAsync(new HandshakePacket { ServerAddress = data.IP, ServerPort = data.Port, ProtocolVersion = data.ProtocolVersion, NextState = (int) NextState.Status });
         }
 
         private async Task SendRequest(SendingArgs args)
@@ -117,26 +120,26 @@ namespace ProtocolModern
                 await args.SendPacketAsync(new RequestPacket());
         }
 
-        private async Task SendResponse(IPacket packet)
+        private async Task SendResponse(ProtobufPacket packet)
         {
             if (OnResponsePacket != null)
                 OnResponsePacket(packet);
         }
 
 
-        private static ServerInfo ParseResponse(IPacket packet)
+        private static ServerInfo ParseResponse(ProtobufPacket packet)
         {
             var response = (ResponsePacket) packet;
 
-            return JsonConvert.DeserializeObject<ServerInfo>(response.Response, new Base64JsonConverter());
+            return JsonConvert.DeserializeObject<ServerInfo>(response.JSONResponse, new Base64JsonConverter());
         }
 
-        private static async Task<long> PingServer(string host, ushort port)
+        private static long PingServer(string host, ushort port)
         {
             var watch = Stopwatch.StartNew();
-            var client = NetworkTCPWrapper.NewNetworkTcp();
-            await client.ConnectAsync(host, port);
-            client.DisconnectAsync();
+            var client = TCPClientWrapper.CreateTCPClient();
+            client.Connect(host, port);
+            client.Disconnect();
             watch.Stop();
 
             return watch.ElapsedMilliseconds;
