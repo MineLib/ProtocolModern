@@ -4,7 +4,8 @@ using Aragas.Core.Data;
 using Aragas.Core.Packets;
 
 using MineLib.Core;
-using MineLib.Core.Interfaces;
+using MineLib.Core.Events.SendingEvents;
+using MineLib.Core.Exceptions;
 
 using MineLib.PacketBuilder.Client.Play;
 
@@ -65,7 +66,7 @@ namespace ProtocolModern
                     {
                         case ClientResponse.PlayPacketTypes.KeepAlive:
                             var keepAlivePacket = (KeepAlivePacket) packet;
-                            DoSending(typeof(KeepAlive), new KeepAliveArgs(keepAlivePacket.KeepAliveID));
+                            DoSending(typeof(KeepAliveEvent), new KeepAliveEventArgs(keepAlivePacket.KeepAliveID));
                             break;
 
                         case ClientResponse.PlayPacketTypes.JoinGame:

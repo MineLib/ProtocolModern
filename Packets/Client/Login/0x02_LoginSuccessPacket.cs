@@ -10,6 +10,7 @@ using MineLib.Core.Data.Structs;
 using MineLib.Core.Extensions;
 
 using System;
+using Aragas.Core.IO;
 
 namespace MineLib.PacketBuilder.Client.Login
 {
@@ -28,7 +29,7 @@ namespace MineLib.PacketBuilder.Client.Login
             return this;
         }
 
-        public override ProtobufPacket WritePacket(IPacketStream stream)
+        public override ProtobufPacket WritePacket(PacketStream stream)
         {
 			stream.Write(UUID);
 			stream.Write(Username);

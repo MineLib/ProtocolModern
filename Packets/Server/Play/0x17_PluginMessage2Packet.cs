@@ -10,6 +10,7 @@ using MineLib.Core.Data.Structs;
 using MineLib.Core.Extensions;
 
 using System;
+using Aragas.Core.IO;
 
 namespace MineLib.PacketBuilder.Server.Play
 {
@@ -29,7 +30,7 @@ namespace MineLib.PacketBuilder.Server.Play
             return this;
         }
 
-        public override ProtobufPacket WritePacket(IPacketStream stream)
+        public override ProtobufPacket WritePacket(PacketStream stream)
         {
 			stream.Write(Channel);
 			stream.Write(Data.Length);

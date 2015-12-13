@@ -9,18 +9,18 @@ using Aragas.Core.Packets;
 using MineLib.Core.Data;
 using MineLib.Core.Data.Anvil;
 using MineLib.Core.Data.Structs;
-using MineLib.Core.Interfaces;
+using MineLib.Core.Events.ReceiveEvents;
+using MineLib.Core.Events.ReceiveEvents.Anvil;
 
 namespace ProtocolModern
 {
     public sealed partial class Protocol
     {
-        private Dictionary<Type, List<Func<ProtobufPacket, Task>>> CustomPacketHandlers { get; set; }
+        private Dictionary<Type, List<Func<ProtobufPacket, Task>>> CustomPacketHandlers { get; }
 
-        public void RegisterReceiving(Type packetType, Func<ProtobufPacket, Task> func) 
+        public override void RegisterReceiving(Type packetType, Func<ProtobufPacket, Task> func) 
         {
-            var any = packetType.GetTypeInfo().IsSubclassOf(typeof(ProtobufPacket));
-            if (!any)
+            if (!packetType.GetTypeInfo().IsSubclassOf(typeof(ProtobufPacket)))
                 throw new InvalidOperationException("Type type must implement Aragas.Core.Packets.ProtobufPacket");
 
             if (CustomPacketHandlers.ContainsKey(packetType))
@@ -28,21 +28,18 @@ namespace ProtocolModern
             else
                 CustomPacketHandlers.Add(packetType, new List<Func<ProtobufPacket, Task>> {func});
         }
-        
-        public void DeregisterReceiving(Type packetType, Func<ProtobufPacket, Task> func)
+        protected override void DeregisterReceiving(Type packetType, Func<ProtobufPacket, Task> func)
         {
-            var any = packetType.GetTypeInfo().IsSubclassOf(typeof(ProtobufPacket));
-            if (!any)
+            if (!packetType.GetTypeInfo().IsSubclassOf(typeof(ProtobufPacket)))
                 throw new InvalidOperationException("Type type must implement Aragas.Core.Packets.ProtobufPacket");
 
             if (CustomPacketHandlers.ContainsKey(packetType))
                 CustomPacketHandlers[packetType].Remove(func);
         }
 
-        public void DoReceiving(Type packetType, ProtobufPacket packet)
+        protected override void DoReceiving(Type packetType, ProtobufPacket packet)
         {
-            var any = packetType.GetTypeInfo().IsSubclassOf(typeof(ProtobufPacket));
-            if (!any)
+            if (!packetType.GetTypeInfo().IsSubclassOf(typeof(ProtobufPacket)))
                 throw new InvalidOperationException("Type type must implement Aragas.Core.Packets.ProtobufPacket");
 
             if (CustomPacketHandlers.ContainsKey(packetType))
@@ -55,86 +52,86 @@ namespace ProtocolModern
 
         private void OnChatMessage(string message)
         {
-            Minecraft.DoReceiveEvent(typeof (OnChatMessage), new OnChatMessage(message));
+            Minecraft.DoReceiveEvent(typeof (ChatMessageEvent), new ChatMessageEvent(message));
         }
 
         #region Anvil
 
         private void OnChunk(Chunk chunk)
         {
-            Minecraft.DoReceiveEvent(typeof (OnChunk), new OnChunk(chunk));
+            Minecraft.DoReceiveEvent(typeof (ChunkEvent), new ChunkEvent(chunk));
         }
 
         private void OnChunkArray(Chunk[] chunks)
         {
-            Minecraft.DoReceiveEvent(typeof (OnChunkArray), new OnChunkArray(chunks));
+            Minecraft.DoReceiveEvent(typeof (ChunkArrayEvent), new ChunkArrayEvent(chunks));
         }
 
         private void OnBlockChange(Position location, int block)
         {
-            Minecraft.DoReceiveEvent(typeof(OnBlockChange), new OnBlockChange(location, block));
+            Minecraft.DoReceiveEvent(typeof(BlockChangeEvent), new BlockChangeEvent(location, block));
         }
 
         private void OnMultiBlockChange(Coordinates2D chunkLocation, Record[] records)
         {
-            Minecraft.DoReceiveEvent(typeof(OnMultiBlockChange), new OnMultiBlockChange(chunkLocation, records));
+            Minecraft.DoReceiveEvent(typeof(MultiBlockChangeEvent), new MultiBlockChangeEvent(chunkLocation, records));
         }
 
         private void OnBlockAction(Position location, int block, object blockAction)
         {
-            Minecraft.DoReceiveEvent(typeof(OnBlockAction), new OnBlockAction(location, block, blockAction));
+            Minecraft.DoReceiveEvent(typeof(BlockActionEvent), new BlockActionEvent(location, block, blockAction));
         }
 
         private void OnBlockBreakAction(int entityID, Position location, byte stage)
         {
-            Minecraft.DoReceiveEvent(typeof(OnBlockBreakAction), new OnBlockBreakAction(entityID, location, stage));
+            Minecraft.DoReceiveEvent(typeof(BlockBreakActionEvent), new BlockBreakActionEvent(entityID, location, stage));
         }
 
         #endregion
 
         private void OnPlayerPosition(Vector3 position)
         {
-            Minecraft.DoReceiveEvent(typeof (OnPlayerPosition), new OnPlayerPosition(position));
+            Minecraft.DoReceiveEvent(typeof (PlayerPositionEvent), new PlayerPositionEvent(position));
         }
 
         private void OnPlayerLook(Vector3 look)
         {
-            Minecraft.DoReceiveEvent(typeof (OnPlayerLook), new OnPlayerLook(look));
+            Minecraft.DoReceiveEvent(typeof (PlayerLookEvent), new PlayerLookEvent(look));
         }
 
         private void OnHeldItemChange(byte slot)
         {
-            Minecraft.DoReceiveEvent(typeof(OnHeldItemChange), new OnHeldItemChange(slot));
+            Minecraft.DoReceiveEvent(typeof(HeldItemChangeEvent), new HeldItemChangeEvent(slot));
         }
 
         private void OnSpawnPoint(Position location)
         {
-            Minecraft.DoReceiveEvent(typeof(OnSpawnPoint), new OnSpawnPoint(location));
+            Minecraft.DoReceiveEvent(typeof(SpawnPointEvent), new SpawnPointEvent(location));
         }
 
         private void OnUpdateHealth(float health, int food, float foodSaturation)
         {
-            Minecraft.DoReceiveEvent(typeof(OnUpdateHealth), new OnUpdateHealth(health, food, foodSaturation));
+            Minecraft.DoReceiveEvent(typeof(UpdateHealthEvent), new UpdateHealthEvent(health, food, foodSaturation));
         }
 
         private void OnRespawn(object gameInfo)
         {
-            Minecraft.DoReceiveEvent(typeof(OnRespawn), new OnRespawn(gameInfo));
+            Minecraft.DoReceiveEvent(typeof(RespawnEvent), new RespawnEvent(gameInfo));
         }
 
         private void OnAction(int entityID, int action)
         {
-            Minecraft.DoReceiveEvent(typeof(OnAction), new OnAction(entityID, action));
+            Minecraft.DoReceiveEvent(typeof(ActionEvent), new ActionEvent(entityID, action));
         }
 
         private void OnSetExperience(float experienceBar, int level, int totalExperience)
         {
-            Minecraft.DoReceiveEvent(typeof(OnSetExperience), new OnSetExperience(experienceBar, level, totalExperience));
+            Minecraft.DoReceiveEvent(typeof(SetExperienceEvent), new SetExperienceEvent(experienceBar, level, totalExperience));
         }
 
         private void OnTimeUpdate(long worldAge, long timeOfDay)
         {
-            Minecraft.DoReceiveEvent(typeof(OnTimeUpdate), new OnTimeUpdate(worldAge, timeOfDay));
+            Minecraft.DoReceiveEvent(typeof(TimeUpdateEvent), new TimeUpdateEvent(worldAge, timeOfDay));
         }
 
         #endregion InnerReceiving

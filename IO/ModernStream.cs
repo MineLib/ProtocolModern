@@ -10,12 +10,12 @@ using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 namespace ProtocolModern.IO
 {
-    public sealed class ModernStream : ProtobufStream
+    public sealed class CompressionProtobufStream : ProtobufStream
     {
         public bool CompressionEnabled { get; private set; }
         public long CompressionThreshold { get; private set; }
 
-        public ModernStream(ITCPClient tcp) : base(tcp, false) { }
+        public CompressionProtobufStream(ITCPClient tcp) : base(tcp, false) { }
 
         public void SetCompression(long threshold)
         {

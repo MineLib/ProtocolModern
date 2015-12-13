@@ -13,7 +13,8 @@ using Aragas.Core.Wrappers;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 using MineLib.Core;
-using MineLib.Core.Interfaces;
+using MineLib.Core.Events;
+using MineLib.Core.Exceptions;
 using MineLib.Core.IO;
 
 using MineLib.PacketBuilder.Client.Login;
@@ -31,7 +32,7 @@ using ProtocolModern.Packets;
 
 namespace ProtocolModern
 {
-    public sealed partial class Protocol : IProtocol
+    public sealed partial class Protocol : MineLib.Core.Protocols.Protocol
     {
         static Protocol()
         {
@@ -40,51 +41,56 @@ namespace ProtocolModern
 
         #region Properties
 
-        public string Name => "Modern";
-        public string Version => "1.8.7";
+        public override string Name => "Modern";
+        public override string Version => "1.8.7";
 
-        public ConnectionState State { get; private set; }
+        public override ConnectionState State { get; protected set; }
 
-        public bool Connected => Stream != null && Stream.Connected;
+        public override string Host => Stream?.Host;
+        public override ushort Port => Stream?.Port ?? 0;
+        public override bool Connected => Stream != null && Stream.Connected;
 
-        public bool UseLogin => Minecraft.UseLogin;
+        public override bool UseLogin => Minecraft.UseLogin;
 
-        public bool IsForge { get; private set; }
+        private bool IsForge { get; set; }
 
-        // -- Debugging
-        public bool SavePackets { get; private set; }
-        public bool SavePacketsToDisk { get; private set; }
-        public bool SaveEntityPacketsToDisk { get; private set; }
-        public bool SaveRawMapPacketsToDisk { get; private set; }
+        #endregion Properties
 
-        public List<ProtobufPacket> PacketsReceived { get; private set; }
-        public List<ProtobufPacket> PacketsSended { get; private set; }
-        public List<ProtobufPacket> PluginMessage { get; private set; }
 
-        public List<ProtobufPacket> LastPackets => PacketsReceived?.GetRange(PacketsReceived.Count - 50, 50);
-        public ProtobufPacket LastProtobufPacket => PacketsReceived[PacketsReceived.Count - 1];
+        #region Debugging
+
+        public override bool SavePackets { get; }
+        private bool SavePacketsToDisk { get; set; }
+        private bool SaveEntityPacketsToDisk { get; set; }
+        private bool SaveRawMapPacketsToDisk { get; set; }
+
+        protected override List<ProtobufPacket> PacketsReceived { get; }
+        protected override List<ProtobufPacket> PacketsSended { get; }
+        private List<ProtobufPacket> PluginMessage { get; }
+
+        protected override List<ProtobufPacket> LastPackets => PacketsReceived?.GetRange(PacketsReceived.Count - 50, 50);
+        protected override ProtobufPacket LastProtobufPacket => PacketsReceived[PacketsReceived.Count - 1];
 
         private IFolder PacketDumpFolder { get; set; }
         private IFolder PacketDumpRawFolder { get; set; }
-        // -- Debugging
 
-        #endregion
+        #endregion Debugging
 
         private IThread ReadThread { get; set; }
         private CancellationTokenSource CancellationToken { get; set; }
 
-        private IMinecraftClient Minecraft { get; set; }
+        private MineLibClient Minecraft { get; set; }
 
-        private ModernStream Stream { get; set; }
+        private CompressionProtobufStream Stream { get; set; }
 
         private bool CompressionEnabled => Stream != null && Stream.CompressionEnabled;
         private long CompressionThreshold => Stream?.CompressionThreshold ?? -1;
 
 
-        public IProtocol Initialize(IMinecraftClient client, bool debugPackets = false)
+        public Protocol(MineLibClient client, bool debugPackets = false) : base(client, debugPackets)
         {
             Minecraft = client;
-            Stream = new ModernStream(TCPClientWrapper.CreateTCPClient());
+            Stream = new CompressionProtobufStream(TCPClientWrapper.CreateTCPClient());
 
             SavePackets             = debugPackets;
             SavePacketsToDisk       = true;
@@ -95,7 +101,7 @@ namespace ProtocolModern
             PacketsSended = new List<ProtobufPacket>();
             PluginMessage = new List<ProtobufPacket>();
 
-            SendingAsyncHandlers = new Dictionary<Type, List<Func<SendingArgs, Task>>>();
+            SendingHandlers = new Dictionary<Type, List<Action<SendingEventArgs>>>();
             CustomPacketHandlers = new Dictionary<Type, List<Func<ProtobufPacket, Task>>>();
             RegisterSupportedSendings();
 
@@ -104,8 +110,6 @@ namespace ProtocolModern
             var time = DateTime.Now;
             PacketDumpFolder = FileSystemWrapper.LogFolder.CreateFolderAsync($"{time:yyyy-MM-dd_hh.mm.ss}", CreationCollisionOption.GenerateUniqueName).Result;
             PacketDumpRawFolder = FileSystemWrapper.LogFolder.CreateFolderAsync($"{time:yyyy-MM-dd_hh.mm.ss}-Raw", CreationCollisionOption.GenerateUniqueName).Result;
-
-            return this;
         }
 
 
@@ -248,6 +252,9 @@ namespace ProtocolModern
                     #endregion Play
                 }
 
+                if(packet == null)
+                    return;
+
                 if(packet is PluginMessagePacket)
                     PluginMessage.Add(packet);
 
@@ -319,24 +326,20 @@ namespace ProtocolModern
         /// Enabling encryption
         /// </summary>
         /// <param name="packet">EncryptionRequestPacket</param>
-        private async void ModernEnableEncryption(ProtobufPacket packet)
+        private void ModernEnableEncryption(ProtobufPacket packet)
         {
             var request = (EncryptionRequestPacket) packet;
             var sharedKey = PKCS1Signature.CreateSecretKey();
 
             var hash = GetServerIDHash(request.PublicKey, sharedKey, request.ServerID);
-
-            if (!Yggdrasil.JoinSession(Minecraft.AccessToken, Minecraft.SelectedProfile, hash).Result)
+            if (!Yggdrasil.JoinSession(AccessToken, SelectedProfile, hash).Result)
                 throw new ProtocolException("Yggdrasil error: Not authenticated.");
             
             var pkcs = new PKCS1Signature(request.PublicKey);
-            var signedSecret = pkcs.SignData(sharedKey);
-            var signedVerify = pkcs.SignData(request.VerifyToken);
-
-            await SendPacketAsync(new EncryptionResponsePacket
+            SendPacket(new EncryptionResponsePacket
             {
-                SharedSecret = signedSecret,
-                VerifyToken = signedVerify
+                SharedSecret = pkcs.SignData(sharedKey),
+                VerifyToken = pkcs.SignData(request.VerifyToken)
             });
 
             Stream.InitializeEncryption(sharedKey);
@@ -377,7 +380,7 @@ namespace ProtocolModern
 
         #region Network
         
-        public void Connect(string host, ushort port)
+        public override void Connect(string host, ushort port)
         {
             if (Connected)
                 throw new ProtocolException("Connection error: Already connected to server.");
@@ -397,7 +400,7 @@ namespace ProtocolModern
             }
 
         }
-        public void Disconnect()
+        public override void Disconnect()
         {
             if (!Connected)
                 throw new ProtocolException("Connection error: Not connected to server.");
@@ -407,49 +410,6 @@ namespace ProtocolModern
             Stream.Disconnect();
         }
         private void SendPacket(ProtobufPacket packet)
-        {
-            if (!Connected)
-                throw new ProtocolException("Connection error: Not connected to server.");
-
-            HandleState(packet);
-
-            Stream.SendPacket(ref packet);
-
-            if (SavePackets)
-                PacketsSended.Add(packet);
-
-            if (SavePacketsToDisk)
-                DumpPacketSended(packet);
-        }
-        
-        public async Task ConnectAsync(string host, ushort port)
-        {
-            if (Connected)
-                throw new ProtocolException("Connection error: Already connected to server.");
-
-            Stream.Connect(host, port);
-
-            if (ReadThread.IsRunning)
-                throw new ProtocolException("Connection error: Thread already running.");
-            else
-            {
-                ReadThread = ThreadWrapper.CreateThread(ReadCycle);
-                ReadThread.IsBackground = true;
-                ReadThread.Name = "PacketReaderThread";
-            }
-        }
-        public async Task<bool> DisconnectAsync()
-        {
-            if (!Connected)
-                throw new ProtocolException("Connection error: Not connected to server.");
-
-            CancellationToken.Cancel();
-
-            Stream.Disconnect();
-
-            return false;
-        }
-        private async Task SendPacketAsync(ProtobufPacket packet)
         {
             if (!Connected)
                 throw new ProtocolException("Connection error: Not connected to server.");
@@ -485,7 +445,7 @@ namespace ProtocolModern
         #endregion
 
 
-        public void Dispose()
+        public override void Dispose()
         {
             CancellationToken?.Cancel();
 
@@ -497,7 +457,7 @@ namespace ProtocolModern
             PacketsReceived?.Clear();
             PacketsSended?.Clear();
 
-            CancellationToken?.Dispose();
+            //CancellationToken?.Dispose();
         }
     }
 }

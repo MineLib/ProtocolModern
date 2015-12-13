@@ -10,6 +10,7 @@ using MineLib.Core.Data.Structs;
 using MineLib.Core.Extensions;
 
 using System;
+using Aragas.Core.IO;
 
 namespace MineLib.PacketBuilder.Client.Play
 {
@@ -38,7 +39,7 @@ namespace MineLib.PacketBuilder.Client.Play
             return this;
         }
 
-        public override ProtobufPacket WritePacket(IPacketStream stream)
+        public override ProtobufPacket WritePacket(PacketStream stream)
         {
 			stream.Write(EntityID);
 			stream.Write(DeltaX);

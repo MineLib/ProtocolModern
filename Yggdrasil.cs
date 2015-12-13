@@ -39,31 +39,22 @@ namespace ProtocolModern
                 request.ContentType = "application/json";
                 request.Method = "POST";
 
-                var json =
-                    JsonConvert.SerializeObject(new JsonLogin
-                    {
-                        Agent = Agent.Minecraft,
-                        Username = username,
-                        Password = password
-                        // "clientToken": "client identifier"     // optional
-                    });
+                var json =  JsonConvert.SerializeObject(new JsonLogin
+                            {
+                                Agent = Agent.Minecraft,
+                                Username = username,
+                                Password = password
+                                // "clientToken": "client identifier"     // optional
+                            });
 
                 using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
-                //using (var writer = new StreamWriter(await request.GetRequestStreamAsync()))
-                    await writer.WriteAsync(json);
+                    await writer.WriteAsync(json).ConfigureAwait(false);
 
                 using (var resp = await request.GetResponseAsync().ConfigureAwait(false))
-                //using (var resp = await request.GetResponseAsync())
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                {
-                    var response = JsonConvert.DeserializeObject<Response>(await reader.ReadToEndAsync());
-                    return new YggdrasilAnswer { Status = YggdrasilStatus.Success, Response = response };
-                }
+                    return new YggdrasilAnswer { Status = YggdrasilStatus.Success, Response = JsonConvert.DeserializeObject<Response>(await reader.ReadToEndAsync().ConfigureAwait(false)) };
             }
-            catch (WebException e)
-            {
-                return HandleWebException(e).Result;
-            }
+            catch (WebException ex) { return HandleWebException(ex).Result; }
         }
 
         /// <summary>
@@ -83,27 +74,20 @@ namespace ProtocolModern
                 request.ContentType = "application/json";
                 request.Method = "POST";
 
-                var json =
-                    JsonConvert.SerializeObject(new JsonRefreshSession
-                    {
-                        AccessToken = accessToken,
-                        ClientToken = clientToken,
-                    });
+                var json =  JsonConvert.SerializeObject(new JsonRefreshSession
+                            {
+                                AccessToken = accessToken,
+                                ClientToken = clientToken,
+                            });
 
                 using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
-                    await writer.WriteAsync(json);
+                    await writer.WriteAsync(json).ConfigureAwait(false);
 
                 var resp = await request.GetResponseAsync().ConfigureAwait(false);
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                {
-                    var response = JsonConvert.DeserializeObject<Response>(await reader.ReadToEndAsync());
-                    return new YggdrasilAnswer { Status = YggdrasilStatus.Success, Response = response };
-                }
+                    return new YggdrasilAnswer { Status = YggdrasilStatus.Success, Response = JsonConvert.DeserializeObject<Response>(await reader.ReadToEndAsync().ConfigureAwait(false)) };  
             }
-            catch (WebException e)
-            {
-                return HandleWebException(e).Result;
-            }
+            catch (WebException ex) { return HandleWebException(ex).Result; }
         }
 
         /// <summary>
@@ -125,16 +109,13 @@ namespace ProtocolModern
                 var json = JsonConvert.SerializeObject(new JsonVerifySession { AccessToken = accessToken });
 
                 using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
-                    await writer.WriteAsync(json);
+                    await writer.WriteAsync(json).ConfigureAwait(false);
 
                 var resp = await request.GetResponseAsync().ConfigureAwait(false);
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                    return string.IsNullOrEmpty(await reader.ReadToEndAsync());
+                    return string.IsNullOrEmpty(await reader.ReadToEndAsync().ConfigureAwait(false));
             }
-            catch (WebException)
-            {
-                return false;
-            }
+            catch (WebException) { return false; }
         }
 
         /// <summary>
@@ -154,24 +135,20 @@ namespace ProtocolModern
                 request.ContentType = "application/json";
                 request.Method = "POST";
 
-                var json =
-                    JsonConvert.SerializeObject(new JsonLogout
-                    {
-                        Username = username,
-                        Password = password
-                    });
+                var json =  JsonConvert.SerializeObject(new JsonLogout
+                            {
+                                Username = username,
+                                Password = password
+                            });
 
                 using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
                     await writer.WriteAsync(json);
 
                 var resp = await request.GetResponseAsync().ConfigureAwait(false);
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                    return string.IsNullOrEmpty(await reader.ReadToEndAsync());
+                    return string.IsNullOrEmpty(await reader.ReadToEndAsync().ConfigureAwait(false));
             }
-            catch (WebException)
-            {
-                return false;
-            }
+            catch (WebException) { return false; }
         }
 
         /// <summary>
@@ -191,24 +168,20 @@ namespace ProtocolModern
                 request.ContentType = "application/json";
                 request.Method = "POST";
 
-                var json =
-                    JsonConvert.SerializeObject(new JsonInvalidate
-                    {
-                        AccessToken = accessToken,
-                        ClientToken = clientToken
-                    });
+                var json =  JsonConvert.SerializeObject(new JsonInvalidate
+                            {
+                                AccessToken = accessToken,
+                                ClientToken = clientToken
+                            });
 
                 using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
-                    await writer.WriteAsync(json);
+                    await writer.WriteAsync(json).ConfigureAwait(false);
 
                 var resp = await request.GetResponseAsync().ConfigureAwait(false);
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                    return string.IsNullOrEmpty(await reader.ReadToEndAsync());
+                    return string.IsNullOrEmpty(await reader.ReadToEndAsync().ConfigureAwait(false));
             }
-            catch (WebException)
-            {
-                return false;
-            }
+            catch (WebException) { return false; }
         }
 
         /// <summary>
@@ -226,29 +199,21 @@ namespace ProtocolModern
                 request.ContentType = "application/json";
                 request.Method = "POST";
 
-                var json =
-                    JsonConvert.SerializeObject(new JsonClientAuth
-                    {
-                        AccessToken = accessToken,
-                        SelectedProfile = selectedProfile,
-                        ServerID = serverHash
-                    });
+                var json =  JsonConvert.SerializeObject(new JsonClientAuth
+                            {
+                                AccessToken = accessToken,
+                                SelectedProfile = selectedProfile,
+                                ServerID = serverHash
+                            });
 
                 using (var writer = new StreamWriter(await request.GetRequestStreamAsync().ConfigureAwait(false)))
                     await writer.WriteAsync(json).ConfigureAwait(false);
 
                 using (var resp = await request.GetResponseAsync().ConfigureAwait(false))
                 using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
-                {
-                    //request.Abort();
-
-                    return string.IsNullOrEmpty(await reader.ReadToEndAsync().ConfigureAwait(false));
-                }                   
+                    return string.IsNullOrEmpty(await reader.ReadToEndAsync().ConfigureAwait(false));                 
             }
-            catch (WebException)
-            {
-                return false;
-            }
+            catch (WebException) { return false; }
         }
 
 

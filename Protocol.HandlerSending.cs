@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 using Aragas.Core.Packets;
 
 using MineLib.Core.Data.Structs;
-using MineLib.Core.Interfaces;
+using MineLib.Core.Events;
+using MineLib.Core.Events.SendingEvents;
 
 using MineLib.PacketBuilder.Client.Play;
 using MineLib.PacketBuilder.Server.Handshaking;
@@ -21,59 +20,55 @@ namespace ProtocolModern
 {
     public sealed partial class Protocol
     {
-        private Dictionary<Type, List<Func<SendingArgs, Task>>> SendingAsyncHandlers { get; set; }
+        private Dictionary<Type, List<Action<SendingEventArgs>>> SendingHandlers { get; }
 
-        public void RegisterSending(Type sendingType, Func<SendingArgs, Task> func)
+        public override void RegisterSending(Type sendingType, Action<SendingEventArgs> func)
         {
-            var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISending));
-            if (!any)
-                throw new InvalidOperationException("Type type must implement MineLib.Core.Interfaces.ISending");
+            if (!sendingType.GetTypeInfo().IsSubclassOf(typeof(SendingEvent)))
+                throw new InvalidOperationException("Type type must implement MineLib.Core.Events.SendingEvent");
 
-            if (SendingAsyncHandlers.ContainsKey(sendingType))
-                SendingAsyncHandlers[sendingType].Add(func);
+            if (SendingHandlers.ContainsKey(sendingType))
+                SendingHandlers[sendingType].Add(func);
             else
-                SendingAsyncHandlers.Add(sendingType, new List<Func<SendingArgs, Task>> { func });
+                SendingHandlers.Add(sendingType, new List<Action<SendingEventArgs>> { func });
         }
-
-        public void DeregisterSending(Type sendingType, Func<SendingArgs, Task> func)
+        public override void DeregisterSending(Type sendingType, Action<SendingEventArgs> func)
         {
-            var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISending));
-            if (!any)
-                throw new InvalidOperationException("Type type must implement MineLib.Core.Interfaces.ISending");
+            if (!sendingType.GetTypeInfo().IsSubclassOf(typeof(SendingEvent)))
+                throw new InvalidOperationException("Type type must implement MineLib.Core.Events.SendingEvent");
 
-            if (SendingAsyncHandlers.ContainsKey(sendingType))
-                SendingAsyncHandlers[sendingType].Remove(func);
+            if (SendingHandlers.ContainsKey(sendingType))
+                SendingHandlers[sendingType].Remove(func);
         }
         
-        public void DoSending(Type sendingType, SendingArgs args)
+        public override void DoSending(Type sendingType, SendingEventArgs args)
         {
-            var any = sendingType.GetTypeInfo().ImplementedInterfaces.Any(p => p == typeof(ISending));
-            if (!any)
-                throw new InvalidOperationException("Type type must implement MineLib.Core.Interfaces.ISending");
+            if (!sendingType.GetTypeInfo().IsSubclassOf(typeof(SendingEvent)))
+                throw new InvalidOperationException("Type type must implement MineLib.Core.Events.SendingEvent");
 
-            args.RegisterSending(SendPacket, SendPacketAsync);
+            args.RegisterSending(SendPacket);
 
-            if (SendingAsyncHandlers.ContainsKey(sendingType))
-                foreach (var func in SendingAsyncHandlers[sendingType])
+            if (SendingHandlers.ContainsKey(sendingType))
+                foreach (var func in SendingHandlers[sendingType])
                     func(args);
         }
-
-
+        
         private void RegisterSupportedSendings()
         {
-            RegisterSending(typeof(ConnectToServer), ConnectToServerAsync);
-            RegisterSending(typeof(KeepAlive), KeepAliveAsync);
-            RegisterSending(typeof(SendClientInfo), SendClientInfoAsync);
-            RegisterSending(typeof(Respawn), RespawnAsync);
-            RegisterSending(typeof(PlayerMoved), PlayerMovedAsync);
-            RegisterSending(typeof(PlayerSetRemoveBlock), PlayerSetRemoveBlockAsync);
-            RegisterSending(typeof(SendMessage), SendMessageAsync);
-            RegisterSending(typeof(PlayerHeldItem), PlayerHeldItemAsync);
+            RegisterSending(typeof(ConnectToServerEvent), ConnectToServer);
+            RegisterSending(typeof(KeepAliveEvent), KeepAlive);
+            RegisterSending(typeof(SendClientInfoEvent), SendClientInfo);
+            RegisterSending(typeof(RespawnEvent), Respawn);
+            RegisterSending(typeof(PlayerMovedEvent), PlayerMoved);
+            RegisterSending(typeof(PlayerSetRemoveBlockEvent), PlayerSetRemoveBlock);
+            RegisterSending(typeof(SendMessageEvent), SendMessage);
+            RegisterSending(typeof(PlayerHeldItemEvent), PlayerHeldItem);
         }
 
 
         #region InnerSending
 
+        /*
         private async Task ConnectToServerAsync1(SendingArgs args)
         {
             var data = (ConnectToServerArgs) args;
@@ -88,12 +83,13 @@ namespace ProtocolModern
 
             await args.SendPacketAsync(new LoginStartPacket { Name = Minecraft.ClientUsername });
         }
+        */
 
-        private async Task ConnectToServerAsync(SendingArgs args) // Forge
+        private void ConnectToServer(SendingEventArgs args) // Forge
         {
             var data = (ConnectToServerArgs) args;
 
-            await args.SendPacketAsync(new HandshakePacket
+            args.SendPacket(new HandshakePacket
             {
                 ServerAddress = data.ServerHost + "\0FML\0",
                 ServerPort = data.Port,
@@ -101,14 +97,14 @@ namespace ProtocolModern
                 NextState = (int)NextState.Login
             });
 
-            await args.SendPacketAsync(new LoginStartPacket { Name = data.Username });
+            args.SendPacket(new LoginStartPacket { Name = data.Username });
 
 
             //await SendPacketAsync(GetFMLFakeLoginPacket());
             //await SendPacketAsync(new ClientStatusPacket { Status = ClientStatus.Respawn});
         }
 
-        private static ProtobufPacket GetFMLFakeLoginPacket()
+        private ProtobufPacket GetFMLFakeLoginPacket()
         {
             var input = Encoding.UTF8.GetBytes("FML");
             var murmur3 = new MurmurHash3_32();
@@ -125,76 +121,79 @@ namespace ProtocolModern
             return fake;
         }
 
-        private Task KeepAliveAsync(SendingArgs args)
+        private void KeepAlive(SendingEventArgs args)
         {
-            var data = (KeepAliveArgs) args;
+            var data = (KeepAliveEventArgs) args;
 
-            return args.SendPacketAsync(new KeepAlivePacket { KeepAliveID = data.KeepAlive });
+            args.SendPacket(new KeepAlivePacket { KeepAliveID = data.KeepAlive });
         }
 
-        private Task SendClientInfoAsync(SendingArgs args)
+        private void SendClientInfo(SendingEventArgs args)
         {
-            var data = (SendClientInfoArgs) args;
+            var data = (SendClientInfoEventArgs) args;
 
-            return args.SendPacketAsync(new PluginMessagePacket
+            args.SendPacket(new PluginMessagePacket
             {
                 Channel = "MC|Brand",
                 Data = Encoding.UTF8.GetBytes(Minecraft.ClientBrand)
             });
         }
 
-        private Task RespawnAsync(SendingArgs args)
+        private void Respawn(SendingEventArgs args)
         {
-            var data = (RespawnArgs) args;
+            var data = (RespawnEventArgs) args;
 
-            return args.SendPacketAsync(new ClientStatusPacket { ActionID = (int) ClientStatus.Respawn });
+            args.SendPacket(new ClientStatusPacket { ActionID = (int) ClientStatus.Respawn });
         }
 
-        private Task PlayerMovedAsync(SendingArgs args)
+        private void PlayerMoved(SendingEventArgs args)
         {
-            var data = (PlayerMovedArgs)args;
+            var data = (PlayerMovedEventArgs)args;
             switch (data.Mode)
             {
                 case PlaverMovedMode.OnGround:
                 {
                     var pdata = (PlaverMovedDataOnGround) data.Data;
 
-                    return args.SendPacketAsync(new PlayerPacket
+                    args.SendPacket(new PlayerPacket
                     {
                         OnGround = pdata.OnGround
                     });
+                    break;
                 }
 
                 case PlaverMovedMode.Vector3:
                 {
                     var pdata = (PlaverMovedDataVector3) data.Data;
 
-                    return args.SendPacketAsync(new PlayerPositionPacket
+                    args.SendPacket(new PlayerPositionPacket
                     {
-                        X =         pdata.Vector3.X,
-                        FeetY =     pdata.Vector3.Y,
-                        Z =         pdata.Vector3.Z,
-                        OnGround =  pdata.OnGround
+                        X = pdata.Vector3.X,
+                        FeetY = pdata.Vector3.Y,
+                        Z = pdata.Vector3.Z,
+                        OnGround = pdata.OnGround
                     });
+                    break;
                 }
 
                 case PlaverMovedMode.YawPitch:
                 {
                     var pdata = (PlaverMovedDataYawPitch) data.Data;
 
-                    return args.SendPacketAsync(new PlayerLookPacket
+                    args.SendPacket(new PlayerLookPacket
                     {
                         Yaw =       pdata.Yaw,
                         Pitch =     pdata.Pitch,
                         OnGround =  pdata.OnGround
                     });
+                    break;
                 }
 
                 case PlaverMovedMode.All:
                 {
                     var pdata = (PlaverMovedDataAll) data.Data;
 
-                    return args.SendPacketAsync(new PlayerPositionAndLook2Packet
+                    args.SendPacket(new PlayerPositionAndLook2Packet
                     {
                         X =         pdata.Vector3.X,
                         FeetY =     pdata.Vector3.Y,
@@ -203,16 +202,17 @@ namespace ProtocolModern
                         Pitch =     pdata.Pitch,
                         OnGround =  pdata.OnGround
                     });
+                    break;
                 }
 
                 default:
-                    return null;
+                    return;
             }
         }
 
-        private Task PlayerSetRemoveBlockAsync(SendingArgs args)
+        private void PlayerSetRemoveBlock(SendingEventArgs args)
         {
-            var data = (PlayerSetRemoveBlockArgs) args;
+            var data = (PlayerSetRemoveBlockEventArgs) args;
             
             switch (data.Mode)
             {
@@ -220,7 +220,7 @@ namespace ProtocolModern
                 {
                     var pdata = (PlayerSetRemoveBlockDataPlace) data.Data;
 
-                    return args.SendPacketAsync(new PlayerBlockPlacementPacket
+                    args.SendPacket(new PlayerBlockPlacementPacket
                     {
                         Location =              pdata.Location,
                         HeldItem =              pdata.Slot,
@@ -229,24 +229,26 @@ namespace ProtocolModern
                         CursorPositionZ =       (sbyte) pdata.Crosshair.Z,
                         Face =                  (sbyte) pdata.Direction
                     });
+                    break;
                 }
 
                 case PlayerSetRemoveBlockMode.Dig:
                 {
                     var pdata = (PlayerSetRemoveBlockDataDig) data.Data;
 
-                    return args.SendPacketAsync(new PlayerDiggingPacket
+                    args.SendPacket(new PlayerDiggingPacket
                     {
                         Status =                (sbyte) pdata.Status,
                         Location =              pdata.Location,
                         Face =                  pdata.Face
                     });
+                    break;
                 }
 
                 case PlayerSetRemoveBlockMode.Remove:
                 {
                     var pdata = (PlayerSetRemoveBlockDataRemove) data.Data;
-                    return null;
+                    break;
                 }
 
                 default:
@@ -254,18 +256,18 @@ namespace ProtocolModern
             }
         }
 
-        private Task SendMessageAsync(SendingArgs args)
+        private void SendMessage(SendingEventArgs args)
         {
-            var data = (SendMessageArgs) args;
+            var data = (SendMessageEventArgs) args;
 
-            return args.SendPacketAsync(new ChatMessagePacket { JSONData = data.Message });
+            args.SendPacket(new ChatMessagePacket { JSONData = data.Message });
         }
 
-        private Task PlayerHeldItemAsync(SendingArgs args)
+        private void PlayerHeldItem(SendingEventArgs args)
         {
-            var data = (PlayerHeldItemArgs) args;
+            var data = (PlayerHeldItemEventArgs) args;
 
-            return args.SendPacketAsync(new HeldItemChangePacket { Slot = (sbyte) data.Slot });
+            args.SendPacket(new HeldItemChangePacket { Slot = (sbyte) data.Slot });
         }
 
         #endregion InnerSending

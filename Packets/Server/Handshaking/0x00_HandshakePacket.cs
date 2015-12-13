@@ -10,6 +10,7 @@ using MineLib.Core.Data.Structs;
 using MineLib.Core.Extensions;
 
 using System;
+using Aragas.Core.IO;
 
 namespace MineLib.PacketBuilder.Server.Handshaking
 {
@@ -32,7 +33,7 @@ namespace MineLib.PacketBuilder.Server.Handshaking
             return this;
         }
 
-        public override ProtobufPacket WritePacket(IPacketStream stream)
+        public override ProtobufPacket WritePacket(PacketStream stream)
         {
 			stream.Write(ProtocolVersion);
 			stream.Write(ServerAddress);

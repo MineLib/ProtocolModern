@@ -6,6 +6,7 @@ using Aragas.Core.Packets;
 using Aragas.Core.Wrappers;
 
 using MineLib.Core.Data;
+using MineLib.Core.Events;
 using MineLib.Core.Interfaces;
 using MineLib.Core.IO;
 
@@ -19,25 +20,25 @@ using ProtocolModern.Enum;
 
 namespace ProtocolModern
 {
-    public sealed class Handshake : ISending { }
-    public sealed class HandshakeArgs : SendingArgs
+    public sealed class Handshake : SendingEvent { }
+    public sealed class HandshakeArgs : SendingEventArgs
     {
-        public string IP { get; private set; }
-        public ushort Port { get; private set; }
+        public string IP { get; }
+        public ushort Port { get; }
 
-        public int ProtocolVersion { get; private set; }
+        public int ProtocolVersion { get; }
 
-        public HandshakeArgs(string ip, ushort port, int value)
+        public HandshakeArgs(string ip, ushort port, int protocolVersion)
         {
             IP = ip;
             Port = port;
 
-            ProtocolVersion = value;
+            ProtocolVersion = protocolVersion;
         }
     }
 
-    public sealed class SendRequest : ISending { }
-    public sealed class SendRequestArgs : SendingArgs { }
+    public sealed class SendRequest : SendingEvent { }
+    public sealed class SendRequestArgs : SendingEventArgs { }
 
     public sealed class StatusClient : IStatusClient
     {
@@ -49,20 +50,18 @@ namespace ProtocolModern
             var responseData = new ResponseData();
             var response = false;
 
-            var protocol = new Protocol().Initialize(null, true);
+            var protocol = new Protocol(null, true);
             protocol.Connect(ip, port);
+
+            protocol.RegisterReceiving(typeof(ResponsePacket), SendResponse);
+            OnResponsePacket += packet => { responseData.Info = ParseResponse(packet); response = true; };
 
             protocol.RegisterSending(typeof(Handshake), Handshake);
             protocol.RegisterSending(typeof(SendRequest), SendRequest);
 
             protocol.DoSending(typeof(Handshake), new HandshakeArgs(ip, port, protocolVersion));
             protocol.DoSending(typeof(SendRequest), new SendRequestArgs());
-
-            protocol.RegisterReceiving(typeof(ResponsePacket), SendResponse);
-
-            OnResponsePacket += packet => { responseData.Info = ParseResponse(packet); response = true; };
-
-
+            
             var watch = Stopwatch.StartNew();
             while (!response) { Task.Delay(100).Wait(); if(watch.ElapsedMilliseconds > 2000) { responseData.Ping = long.MaxValue;  break;} }
 
@@ -80,7 +79,7 @@ namespace ProtocolModern
             var serverInfo = new ServerInfo();
             var response = false;
 
-            var protocol = new Protocol();
+            var protocol = new Protocol(null, true);
             protocol.Connect(ip, port);
 
             protocol.RegisterSending(typeof(SendRequest), SendRequest);
@@ -104,26 +103,29 @@ namespace ProtocolModern
         }
 
 
-        private async Task Handshake(SendingArgs args)
+        private static void Handshake(SendingEventArgs args)
         {
             var data = (HandshakeArgs) args;
 
-            if (args.SendPacketAsync != null)
-                await args.SendPacketAsync(new HandshakePacket { ServerAddress = data.IP, ServerPort = data.Port, ProtocolVersion = data.ProtocolVersion, NextState = (int) NextState.Status });
+            args.SendPacket?.Invoke(new HandshakePacket
+            {
+                ServerAddress = data.IP,
+                ServerPort = data.Port,
+                ProtocolVersion = data.ProtocolVersion,
+                NextState = (int) NextState.Status
+            });
         }
 
-        private async Task SendRequest(SendingArgs args)
+        private static void SendRequest(SendingEventArgs args)
         {
             var data = (SendRequestArgs) args;
 
-            if (args.SendPacketAsync != null)
-                await args.SendPacketAsync(new RequestPacket());
+            args.SendPacket?.Invoke(new RequestPacket());
         }
 
         private async Task SendResponse(ProtobufPacket packet)
         {
-            if (OnResponsePacket != null)
-                OnResponsePacket(packet);
+            OnResponsePacket?.Invoke(packet);
         }
 
 

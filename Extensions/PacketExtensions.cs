@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 
 using Aragas.Core.Data;
-using Aragas.Core.Interfaces;
+using Aragas.Core.IO;
 
+using MineLib.Core;
 using MineLib.Core.Data;
 using MineLib.Core.Data.Anvil;
 using MineLib.Core.Data.Structs;
-using MineLib.Core.Interfaces;
 
-using static Aragas.Core.Interfaces.PacketDataReader;
+using static Aragas.Core.IO.PacketDataReader;
 
 namespace ProtocolModern.Extensions
 {
@@ -17,15 +17,16 @@ namespace ProtocolModern.Extensions
     {
         public static void Init()
         {
-            ExtendRead(new ExtendReadInfo(typeof(NotSupportedType), ReadNotSupportedType));
-            ExtendRead(new ExtendReadInfo(typeof(Chunk), ReadChunk));
-            ExtendRead(new ExtendReadInfo(typeof(Chunk[]), ReadChunkArray));
+            ExtendRead<NotSupportedType>(ReadNotSupportedType);
+            ExtendRead<Chunk>(ReadChunk);
+
+            ExtendRead<Chunk[]>(ReadChunkArray);
         }
 
-        public static void Write(this IPacketStream stream, NotSupportedType value) { }
+        public static void Write(this PacketStream stream, NotSupportedType value) { }
         private static NotSupportedType ReadNotSupportedType(PacketDataReader reader, int length = 0) { return null; }
 
-        public static void Write(this IPacketStream stream, Chunk value) { }
+        public static void Write(this PacketStream stream, Chunk value) { }
         private static Chunk ReadChunk(PacketDataReader reader, int length = 0)
         {
             var chunk = new Chunk(new Coordinates2D(reader.Read<int>(), reader.Read<int>()));
@@ -74,7 +75,7 @@ namespace ProtocolModern.Extensions
             return chunk;
         }
 
-        public static void Write(this IPacketStream stream, Chunk[] chunkList) { }
+        public static void Write(this PacketStream stream, Chunk[] chunkList) { }
         private static Chunk[] ReadChunkArray(PacketDataReader reader, int length = 0)
         {
             var groundUp = reader.Read<bool>();
